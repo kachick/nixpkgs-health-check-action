@@ -33,8 +33,11 @@ jobs:
     runs-on: ubuntu-24.04 # Only support official Linux runners
     permissions: {} # If required any permission, please sending a report
     steps:
-      - uses: DeterminateSystems/nix-installer-action@main
-      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - uses: cachix/install-nix-action@7ec16f2c061ab07b235a7245e06ed46fe9a1cab6 # v31.8.3
+        with:
+          extra_nix_config: |
+            sandbox = true
+            accept-flake-config = true
       - uses: kachick/nixpkgs-package-health-check-action@main
         with:
           pnames: '${{ inputs.packages || env.MY_MAINTAINED_PACKAGES }}'
