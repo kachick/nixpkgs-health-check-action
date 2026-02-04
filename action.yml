@@ -1,4 +1,4 @@
-name: 'nixpkgs-package-health-check-action'
+name: 'nixpkgs-health-check-action'
 description: 'Check packages are buildable and up-to-date'
 author: 'Kenichi Kamiya <kachick1@gmail.com>'
 branding:

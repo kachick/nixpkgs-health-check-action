@@ -1,6 +1,6 @@
-# nixpkgs-package-health-check-action
+# nixpkgs-health-check-action
 
-[![CI - Nix Status](https://github.com/kachick/nixpkgs-package-health-check-action/actions/workflows/ci-nix.yml/badge.svg?branch=main)](https://github.com/kachick/nixpkgs-package-health-check-action/actions/workflows/ci-nix.yml?query=branch%3Amain+)
+[![CI - Nix Status](https://github.com/kachick/nixpkgs-health-check-action/actions/workflows/ci-nix.yml/badge.svg?branch=main)](https://github.com/kachick/nixpkgs-health-check-action/actions/workflows/ci-nix.yml?query=branch%3Amain+)
 
 This GitHub Action helps ensure that specific Nixpkgs packages are buildable and up-to-date.
 
@@ -38,7 +38,7 @@ jobs:
           extra_nix_config: |
             sandbox = true
             accept-flake-config = true
-      - uses: kachick/nixpkgs-package-health-check-action@main
+      - uses: kachick/nixpkgs-health-check-action@main
         with:
           pnames: '${{ inputs.packages || env.MY_MAINTAINED_PACKAGES }}'
 ```
