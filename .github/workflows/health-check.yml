@@ -13,9 +13,7 @@ jobs:
     steps:
       - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
       - run: |
-          nix run 'github:NixOS/nixpkgs/nixpkgs-unstable#hydra-check' -- "$PNAME"
-        env:
-          PNANE: '${{ inputs.pname }}'
+          nix run 'github:NixOS/nixpkgs/nixpkgs-unstable#hydra-check' -- '${{ inputs.pname }}'
 
   nixpkgs-update:
     runs-on: ubuntu-24.04
@@ -28,6 +26,4 @@ jobs:
             sandbox = true
             accept-flake-config = true
       - run: |
-          nix run 'github:kachick/nixpkgs-update-log-checker' -- --packages "$PNAME"
-        env:
-          PNANE: '${{ inputs.pname }}'
+          nix run 'github:kachick/nixpkgs-update-log-checker' -- --packages '${{ inputs.pname }}'
