@@ -11,7 +11,7 @@ I recommend you write own workflow in your repository.\
 However below my use-case might be an your example.
 
 ```yaml
-name: Check maintained package status in nixpkgs
+name: by-maintainer # Keep short for the GitHub Web UI
 
 on:
   schedule:
