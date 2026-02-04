@@ -47,9 +47,6 @@ jobs:
       matrix:
         pname: '${{ fromJson(needs.get-pnames.outputs.json) }}'
     steps:
-      - uses: actions/checkout@v6
-        with:
-          persist-credentials: false
-      - uses: ./.github/workflows/health-check.yml # Require checkouts before using reusable action in same repository
+      - uses: ./.github/workflows/health-check.yml@reboot
         with:
           pname: '${{ matrix.pname }}'
