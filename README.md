@@ -53,14 +53,12 @@ jobs:
 
   check:
     needs: [get-pnames]
-    runs-on: ubuntu-24.04
     strategy:
       matrix:
         pname: '${{ fromJson(needs.get-pnames.outputs.json) }}'
-    steps:
-      - uses: kachick/nixpkgs-health-check-action/.github/workflows/health-check.yml@main
-        with:
-          pname: '${{ matrix.pname }}'
+    uses: kachick/nixpkgs-health-check-action/.github/workflows/health-check.yml@main
+    with:
+      pname: '${{ matrix.pname }}'
 ```
 
 ## Dependencies
