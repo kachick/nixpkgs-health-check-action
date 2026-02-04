@@ -1,0 +1,50 @@
+name: Check maintained package status in nixpkgs
+
+on:
+  schedule:
+    # e.g: “At 10:00 on Monday. (UTC)”
+    - cron: '0 10 * * 1'
+  workflow_dispatch:
+    inputs:
+      maintainer:
+        description: 'Maintainer ID of the package'
+        required: true
+        type: string
+        default: 'kachick'
+  pull_request: # For development
+
+permissions:
+  contents: read
+
+jobs:
+  get-pnames:
+    runs-on: ubuntu-24.04
+    env:
+      MAINTAINER: '${{ inputs.maintainer }}'
+    outputs:
+      json: '${{ steps.print-pnames-as-json.outputs.json }}'
+    steps:
+      - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
+        with:
+          # Enable accept-flake-config for using the binary cache
+          extra_nix_config: |
+            sandbox = true
+            accept-flake-config = true
+      - id: print-pnames-as-json
+        run: |
+          {
+            echo 'report<<JSON'
+            nix run github:kachick/nixpkgs-maintained-by -- -id "$MAINTAINER" -json
+            echo 'JSON'
+          } 2>/dev/null | tee --append "$GITHUB_OUTPUT"
+
+  check:
+    needs: [get-pnames]
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        pname: '${{ fromJson(needs.get-pnames.outputs.json) }}'
+    steps:
+      - uses: ./.github/workflows/health-check.yml
+        with:
+          pname: '${{ matrix.pname }}'
