@@ -6,9 +6,6 @@ on:
         required: true
         type: string
 
-env:
-  PNANE: '${{ inputs.pname }}'
-
 jobs:
   hydra:
     runs-on: ubuntu-24.04
@@ -17,6 +14,8 @@ jobs:
       - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
       - run: |
           nix run 'github:NixOS/nixpkgs/nixpkgs-unstable#hydra-check' -- "$PNAME"
+        env:
+          PNANE: '${{ inputs.pname }}'
 
   nixpkgs-update:
     runs-on: ubuntu-24.04
@@ -30,3 +29,5 @@ jobs:
             accept-flake-config = true
       - run: |
           nix run 'github:kachick/nixpkgs-update-log-checker' -- --packages "$PNAME"
+        env:
+          PNANE: '${{ inputs.pname }}'
