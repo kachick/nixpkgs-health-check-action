@@ -1,0 +1,32 @@
+name: 'Nixpkgs health checks'
+on:
+  workflow_call:
+    inputs:
+      pname:
+        required: true
+        type: string
+
+env:
+  PNANE: '${{ inputs.pname }}'
+
+jobs:
+  hydra:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
+      - run: |
+          nix run 'github:NixOS/nixpkgs/nixpkgs-unstable#hydra-check' -- "$PNAME"
+
+  nixpkgs-update:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
+        with:
+          # Enable accept-flake-config for using the garnix
+          extra_nix_config: |
+            sandbox = true
+            accept-flake-config = true
+      - run: |
+          nix run 'github:kachick/nixpkgs-update-log-checker' -- --packages "$PNAME"

@@ -1,20 +1,17 @@
-# nixpkgs-package-health-check-action
+# nixpkgs-health-check-action
 
-[![CI - Nix Status](https://github.com/kachick/nixpkgs-package-health-check-action/actions/workflows/ci-nix.yml/badge.svg?branch=main)](https://github.com/kachick/nixpkgs-package-health-check-action/actions/workflows/ci-nix.yml?query=branch%3Amain+)
+[![CI - Nix Status](https://github.com/kachick/nixpkgs-health-check-action/actions/workflows/ci-nix.yml/badge.svg?branch=main)](https://github.com/kachick/nixpkgs-health-check-action/actions/workflows/ci-nix.yml?query=branch%3Amain+)
 
 This GitHub Action helps ensure that specific Nixpkgs packages are buildable and up-to-date.
 
 ## Usage
 
-In your workflow, add this action after installing Nix, enable flake, and use cache helpers like this:
+This repository has [simple](.github/workflows/health-check.yml) reusable workflow for my personal use.\
+I recommend you write own workflow in your repository.\
+However below my use-case might be an your example.
 
 ```yaml
-name: Check packages health
-
-env:
-  # Delimited with " " is useful for workflow_dispatch rather than lines
-  MY_MAINTAINED_PACKAGES: |
-    typescript-go lima dprint brush
+name: by-maintainer # Keep short for the GitHub Web UI
 
 on:
   schedule:
@@ -22,42 +19,57 @@ on:
     - cron: '0 10 * * 1'
   workflow_dispatch:
     inputs:
-      packages:
-        description: 'Targets to check'
+      maintainer:
+        description: 'Maintainer ID of the package'
         required: true
         type: string
-        default: '${{ env.MY_MAINTAINED_PACKAGES }}'
+        default: 'SET_YOUR_ID'
+
+permissions:
+  contents: read
 
 jobs:
-  check:
-    runs-on: ubuntu-24.04 # Only support official Linux runners
-    permissions: {} # If required any permission, please sending a report
+  get-pnames:
+    runs-on: ubuntu-24.04
+    env:
+      MAINTAINER: '${{ inputs.maintainer }}'
+    outputs:
+      json: '${{ steps.print-pnames-as-json.outputs.json }}'
     steps:
-      - uses: cachix/install-nix-action@7ec16f2c061ab07b235a7245e06ed46fe9a1cab6 # v31.8.3
+      - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
         with:
+          nix_path: 'nixpkgs=channel:nixpkgs-unstable'
+          # Enable accept-flake-config for using the binary cache
           extra_nix_config: |
             sandbox = true
             accept-flake-config = true
-      - uses: kachick/nixpkgs-package-health-check-action@main
-        with:
-          pnames: '${{ inputs.packages || env.MY_MAINTAINED_PACKAGES }}'
-```
+      - id: print-pnames-as-json
+        run: |
+          {
+            echo 'report<<JSON'
+            nix run github:kachick/nixpkgs-maintained-by -- -id "$MAINTAINER" -json
+            echo 'JSON'
+          } 2>/dev/null | tee --append "$GITHUB_OUTPUT"
 
-Cache helper is optional. However nixpkgs-update-log-checker takes minutes to build, it does not provide binary cache.
+  check:
+    needs: [get-pnames]
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        pname: '${{ fromJson(needs.get-pnames.outputs.json) }}'
+    steps:
+      - uses: kachick/nixpkgs-health-check-action/.github/workflows/health-check.yml@main
+        with:
+          pname: '${{ matrix.pname }}'
+```
 
 ## Dependencies
 
 - [hydra-check](https://github.com/nix-community/hydra-check)
 - [nixpkgs-update-log-checker](https://github.com/kachick/nixpkgs-update-log-checker)
-
-## Future Plans
-
-- The current nixpkgs-update-log-checker doesn't check if a tool is the latest version available globally.\
-  I may add support for this by integrating with [Repology](https://repology.org/).
-- Simplify the process of checking packages for which users are maintainers.
-- Add outputs to the action to facilitate easier notification integration.
+- [nixpkgs-maintained-by](https://github.com/kachick/nixpkgs-maintained-by)
 
 ## Scope
 
-- This action does not support linting-related issues.
-- This action does not check the entire Nixpkgs repository. It only checks for specified packages.
+- Does not check the entire Nixpkgs repository. It only checks for specified packages.
+- Does not check the latest version of upstream. It only checks [nixpkgs-update](https://github.com/nix-community/nixpkgs-update)'s [results](https://nixpkgs-update-logs.nix-community.org/).
