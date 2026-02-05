@@ -10,8 +10,8 @@ on:
         description: 'Maintainer ID of the package'
         required: true
         type: string
-        default: 'kachick'
-  # pull_request: # For development
+        default: 'kachick' # This should be a "key" of https://github.com/NixOS/nixpkgs/blob/master/maintainers/maintainer-list.nix
+# pull_request: # For development
 
 permissions:
   contents: read
@@ -45,6 +45,7 @@ jobs:
     strategy:
       matrix:
         pname: '${{ fromJson(needs.get-pnames.outputs.json) }}'
+    # uses: kachick/nixpkgs-health-check-action/.github/workflows/health-check.yml@main # For external repository
     uses: ./.github/workflows/health-check.yml
     with:
       pname: '${{ matrix.pname }}'
