@@ -34,6 +34,7 @@
                 nixfmt-tree
                 nixd
                 go-task
+                hydra-check
 
                 dprint
                 typos
