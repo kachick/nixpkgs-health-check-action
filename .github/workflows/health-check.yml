@@ -25,7 +25,9 @@ jobs:
           jq --from-file normalize-hydra-eval.jq raw.json | tee normalized.json
       - name: Check and report if found errors
         run: |
-          if jq -e '.[] | select(.severity == "error")' normalized.json | tee errors.json; then
+          jq -e '.[] | select(.severity == "error")' normalized.json > errors.jsonl
+          if [ -s errors.jsonl ]; then
+            cat errors.jsonl
             exit 1
           fi
 
