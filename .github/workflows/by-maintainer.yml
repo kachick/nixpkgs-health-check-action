@@ -18,10 +18,11 @@ permissions:
 
 jobs:
   get-pnames:
+    # if: false # For development
     runs-on: ubuntu-24.04
     env:
-      MAINTAINER: '${{ inputs.maintainer }}'
       # MAINTAINER: 'kachick' # For development
+      MAINTAINER: '${{ inputs.maintainer }}'
     outputs:
       json: '${{ steps.print-pnames-as-json.outputs.json }}'
     steps:
@@ -43,6 +44,13 @@ jobs:
   check:
     needs: [get-pnames]
     strategy:
+      ## For development
+      # matrix:
+      #   # Testing values: https://github.com/nix-community/hydra-check/pull/94
+      #   pname: [
+      #     'rumdl',
+      #     'alliance',
+      #   ]
       matrix:
         pname: '${{ fromJson(needs.get-pnames.outputs.json) }}'
     # uses: kachick/nixpkgs-health-check-action/.github/workflows/health-check.yml@main # For external repository
