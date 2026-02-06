@@ -12,7 +12,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
-      # Using `--eval` to check all platforms. See https://github.com/bryango
+      # Using `--eval` to check all platforms. See https://github.com/nix-community/hydra-check/issues/91
       - uses: actions/checkout@v6
         with:
           persist-credentials: false
