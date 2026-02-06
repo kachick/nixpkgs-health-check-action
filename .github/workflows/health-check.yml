@@ -11,22 +11,21 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
+      - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
+      # Using `--eval` to check all platforms. See https://github.com/bryango
       - uses: actions/checkout@v6
         with:
           persist-credentials: false
-      - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
-      # Using `--eval` to check all platforms. See https://github.com/bryango
       - name: Run hydra-check
         run: |
-          nix develop --command hydra-check --json --channel=nixpkgs-unstable --eval \
+          nix run 'github:NixOS/nixpkgs/nixpkgs-unstable#hydra-check' -- --json --channel=nixpkgs-unstable --eval \
             '${{ inputs.pname }}' | tee raw.json
       - name: Normalize the result
         run: |
           jq --from-file normalize-hydra-eval.jq raw.json | tee normalized.json
       - name: Check and report if found errors
         run: |
-          jq -e '.[] | select(.severity == "error")' normalized.json > errors.jsonl
-          if [ -s errors.jsonl ]; then
+          if jq -e '.[] | select(.severity == "error")' normalized.json > errors.jsonl; then
             cat errors.jsonl
             exit 1
           fi
