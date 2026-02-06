@@ -20,8 +20,8 @@ jobs:
   get-pnames:
     runs-on: ubuntu-24.04
     env:
-      MAINTAINER: '${{ inputs.maintainer }}'
-      # MAINTAINER: 'kachick' # For development
+      MAINTAINER: 'kachick' # For development
+    # MAINTAINER: '${{ inputs.maintainer }}'
     outputs:
       json: '${{ steps.print-pnames-as-json.outputs.json }}'
     steps:
