@@ -16,6 +16,10 @@ on:
 permissions:
   contents: read
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   get-pnames:
     # if: false # For development
@@ -38,7 +42,7 @@ jobs:
             echo 'json<<JSON'
             nix run github:kachick/nixpkgs-maintained-by -- -id "$MAINTAINER" -json
             echo 'JSON'
-          } 2>/dev/null | tee --append "$GITHUB_OUTPUT"
+          } | tee --append "$GITHUB_OUTPUT"
 
   check:
     needs: [get-pnames]

@@ -6,6 +6,10 @@ on:
         required: true
         type: string
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   hydra:
     runs-on: ubuntu-24.04
@@ -17,9 +21,11 @@ jobs:
         with:
           persist-credentials: false
       - name: Run hydra-check
+        env:
+          PNAME: ${{ inputs.pname }}
         run: |
           nix run 'github:NixOS/nixpkgs/nixpkgs-unstable#hydra-check' -- --json --channel=nixpkgs-unstable --eval \
-            '${{ inputs.pname }}' | tee raw.json
+            "$PNAME" | tee raw.json
       - name: Normalize the result
         run: |
           jq --from-file normalize-hydra-eval.jq raw.json | tee normalized.json
@@ -40,5 +46,7 @@ jobs:
           extra_nix_config: |
             sandbox = true
             accept-flake-config = true
-      - run: |
-          nix run 'github:kachick/nixpkgs-update-log-checker' -- --packages '${{ inputs.pname }}'
+      - env:
+          PNAME: ${{ inputs.pname }}
+        run: |
+          nix run 'github:kachick/nixpkgs-update-log-checker' -- --packages "$PNAME"
