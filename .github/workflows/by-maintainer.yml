@@ -13,7 +13,6 @@ on:
         type: string
         default: 'kachick' # This should be a "key" of https://github.com/NixOS/nixpkgs/blob/master/maintainers/maintainer-list.nix
 # pull_request: # For development
-
 permissions:
   contents: read
 
@@ -22,8 +21,7 @@ jobs:
     # if: false # For development
     runs-on: ubuntu-24.04
     env:
-      # MAINTAINER: 'kachick' # For development
-      MAINTAINER: '${{ inputs.maintainer }}'
+      MAINTAINER: ${{ inputs.maintainer || 'kachick' }}
     outputs:
       json: '${{ steps.print-pnames-as-json.outputs.json }}'
     steps:
