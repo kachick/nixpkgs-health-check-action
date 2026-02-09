@@ -47,6 +47,7 @@ jobs:
   check:
     needs: [get-pnames]
     strategy:
+      fail-fast: false
       ## For development
       # matrix:
       #   # Testing values: https://github.com/nix-community/hydra-check/pull/94
