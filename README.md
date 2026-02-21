@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: cachix/install-nix-action@v31
-      - uses: kachick/nixpkgs-health-check-action/.github/actions/health-check@main
+      - uses: kachick/nixpkgs-health-check-action@main
         with:
           pname: 'hello'
 ```

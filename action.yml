@@ -28,7 +28,7 @@ runs:
         CONFIG: ${{ inputs.config }}
       run: |
         if [[ -f "$CONFIG" ]]; then
-          json=$("${{ github.action_path }}/../../../check-skip.bash" --pname "$PNAME" --service "hydra" --config "$CONFIG")
+          json=$("${{ github.action_path }}/check-skip.bash" --pname "$PNAME" --service "hydra" --config "$CONFIG")
           if [[ $(echo "$json" | jq -r .skip) == "true" ]]; then
              echo "Skipping $PNAME for hydra. Reason: $(echo "$json" | jq -r .reason)"
              echo "should_skip=true" >> "$GITHUB_OUTPUT"
@@ -42,7 +42,7 @@ runs:
         PNAME: ${{ inputs.pname }}
       run: |
         nix run 'github:NixOS/nixpkgs/nixpkgs-unstable#hydra-check' -- --json --channel=nixpkgs-unstable --eval "$PNAME" | tee raw_hydra.json
-        jq --from-file "${{ github.action_path }}/../../../normalize-hydra-eval.jq" raw_hydra.json | tee normalized_hydra.json
+        jq --from-file "${{ github.action_path }}/normalize-hydra-eval.jq" raw_hydra.json | tee normalized_hydra.json
         if jq -e '.[] | select(.severity == "error")' normalized_hydra.json > hydra_errors.jsonl; then
           echo "::error::Hydra check failed for $PNAME"
           cat hydra_errors.jsonl
@@ -58,7 +58,7 @@ runs:
         CONFIG: ${{ inputs.config }}
       run: |
         if [[ -f "$CONFIG" ]]; then
-          json=$("${{ github.action_path }}/../../../check-skip.bash" --pname "$PNAME" --service "nixpkgs-update" --config "$CONFIG")
+          json=$("${{ github.action_path }}/check-skip.bash" --pname "$PNAME" --service "nixpkgs-update" --config "$CONFIG")
           if [[ $(echo "$json" | jq -r .skip) == "true" ]]; then
              echo "Skipping $PNAME for nixpkgs-update. Reason: $(echo "$json" | jq -r .reason)"
              echo "should_skip=true" >> "$GITHUB_OUTPUT"
