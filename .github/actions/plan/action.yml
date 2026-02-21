@@ -12,7 +12,7 @@ inputs:
     required: true
 outputs:
   matrix:
-    description: 'Flat JSON list of {pname, service} objects to execute'
+    description: 'JSON list of package names to execute'
     value: ${{ steps.generate.outputs.matrix }}
 runs:
   using: 'composite'
@@ -33,18 +33,19 @@ runs:
 
         echo '[]' > matrix.json
         for pname in $(echo "$pnames" | jq -r '.[]'); do
-          for service in "hydra" "nixpkgs-update"; do
-            if [[ -f "$CONFIG" ]]; then
-              skip=$(./.health-check-action/check-skip.bash --pname "$pname" --service "$service" --config "$CONFIG" | jq -r .skip)
-            else
-              skip="false"
-            fi
+          # A package should be included if ANY of its services are not skipped
+          if [[ -f "$CONFIG" ]]; then
+            hydra_skip=$(./.health-check-action/check-skip.bash --pname "$pname" --service "hydra" --config "$CONFIG" | jq -r .skip)
+            update_skip=$(./.health-check-action/check-skip.bash --pname "$pname" --service "nixpkgs-update" --config "$CONFIG" | jq -r .skip)
+          else
+            hydra_skip="false"
+            update_skip="false"
+          fi
 
-            if [[ "$skip" != "true" ]]; then
-              tmp=$(mktemp)
-              jq -c --arg p "$pname" --arg s "$service" '. += [{pname: $p, service: $s}]' matrix.json > "$tmp" && mv "$tmp" matrix.json
-            fi
-          done
+          if [[ "$hydra_skip" != "true" || "$update_skip" != "true" ]]; then
+            tmp=$(mktemp)
+            jq -c --arg p "$pname" '. += [$p]' matrix.json > "$tmp" && mv "$tmp" matrix.json
+          fi
         done
 
         echo "matrix=$(cat matrix.json | jq -c .)" >> "$GITHUB_OUTPUT"

@@ -63,11 +63,11 @@ jobs:
   check:
     needs: [plan]
     if: fromJson(needs.plan.outputs.matrix)[0] != null
-    name: ${{ matrix.item.pname }} / ${{ matrix.item.service }}
+    name: ${{ matrix.pname }}
     strategy:
       fail-fast: false
       matrix:
-        item: '${{ fromJson(needs.plan.outputs.matrix) }}'
+        pname: '${{ fromJson(needs.plan.outputs.matrix) }}'
     runs-on: ubuntu-24.04
     steps:
       - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
@@ -80,14 +80,16 @@ jobs:
         with:
           persist-credentials: false
 
+      # Now run both services sequentially within the same job
+      # Each composite action handles its own skip logic internally
       - name: Run hydra check
-        if: matrix.item.service == 'hydra'
         uses: ./.github/actions/hydra
         with:
-          pname: ${{ matrix.item.pname }}
+          pname: ${{ matrix.pname }}
+          config: ${{ inputs.config }}
 
       - name: Run update check
-        if: matrix.item.service == 'nixpkgs-update'
         uses: ./.github/actions/nixpkgs-update
         with:
-          pname: ${{ matrix.item.pname }}
+          pname: ${{ matrix.pname }}
+          config: ${{ inputs.config }}
