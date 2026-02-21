@@ -14,7 +14,15 @@ tasks:
       - task: lint
   test:
     cmds:
-      - echo 'Update here'
+      # Unit tests
+      - nix eval --json --file test-check-skip.nix
+      # Integration-like tests (Verify GHA usage pattern)
+      - |
+          result=$(PNAME=hello nix eval --impure --json --expr '(import ./check-skip.nix { pname = builtins.getEnv "PNAME"; service = "hydra"; })')
+          echo "$result" | grep -q '"skip":true'
+      - |
+          result=$(PNAME=biz-ud-gothic nix eval --impure --json --expr '(import ./check-skip.nix { pname = builtins.getEnv "PNAME"; service = "hydra"; })')
+          echo "$result" | grep -q '"skip":false'
   fmt:
     cmds:
       - dprint fmt
