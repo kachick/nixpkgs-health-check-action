@@ -1,4 +1,4 @@
-name: CI Test Runner Logic
+name: CI Test Skip Logic
 on:
   pull_request:
     paths:
@@ -10,6 +10,7 @@ permissions:
 
 jobs:
   test-skip-hydra:
+    name: Verify hydra skip flag
     uses: ./.github/workflows/health-check.yml
     with:
       pname: 'hello'
@@ -22,16 +23,30 @@ jobs:
     steps:
       - name: Check result
         env:
-          JOB_RESULT: ${{ needs.test-skip-hydra.result }}
+          HYDRA_RESULT: ${{ needs.test-skip-hydra.outputs.hydra_skipped }}
         run: |
-          echo "Job result: $JOB_RESULT"
-          # In GHA, if a job is skipped via 'if', it doesn't appear in needs
-          # But since we use nested workflows, we can check the overall success
-          # and manually verify in UI that only nixpkgs-update ran.
+          echo "Hydra job result (via outputs): $HYDRA_RESULT"
+          # health-check.yml should still provide outputs for verification in this test.
 
   test-run-all:
+    name: Verify real package execution
     uses: ./.github/workflows/health-check.yml
     with:
       pname: 'biz-ud-gothic'
       hydra: true
       nixpkgs-update: true
+
+  assert-real-ran:
+    needs: test-run-all
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check result
+        env:
+          JOB_RESULT: ${{ needs.test-run-all.result }}
+        run: |
+          echo "Job Result: $JOB_RESULT"
+          if [[ "$JOB_RESULT" != "success" ]]; then
+             echo "Error: Real test job failed or was skipped unexpectedly."
+             exit 1
+          fi

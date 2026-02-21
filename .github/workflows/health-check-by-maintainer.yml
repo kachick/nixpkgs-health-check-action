@@ -48,15 +48,15 @@ jobs:
           extra_nix_config: |
             sandbox = true
             accept-flake-config = true
+      - name: Checkout caller repo
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - name: Checkout assets for skip-check
         uses: actions/checkout@v6
         with:
           repository: kachick/nixpkgs-health-check-action
           path: .action-assets
-          persist-credentials: false
-      - name: Checkout caller repo for config
-        uses: actions/checkout@v6
-        with:
           persist-credentials: false
       - id: generate-matrix
         run: |
@@ -68,6 +68,7 @@ jobs:
           for pname in $(echo "$pnames" | jq -r '.[]'); do
             # Check skip status for each service
             if [[ -f "$CONFIG" ]]; then
+              # Note: check-skip.bash handles absolute path conversion internally
               hydra_skip=$(./.action-assets/check-skip.bash --pname "$pname" --service "hydra" --config "$CONFIG" | jq -r .skip)
               update_skip=$(./.action-assets/check-skip.bash --pname "$pname" --service "nixpkgs-update" --config "$CONFIG" | jq -r .skip)
             else
