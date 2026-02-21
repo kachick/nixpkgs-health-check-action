@@ -29,8 +29,12 @@ on:
 permissions:
   contents: read
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
-  collector:
+  check:
     uses: ./.github/workflows/health-check-by-list.yml
     with:
       maintainer: ${{ inputs.maintainer }}
