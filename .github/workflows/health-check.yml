@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     outputs:
-      skipped: ${{ steps.action.outputs.hydra_skipped }}
+      skipped: ${{ steps.check-skip.outputs.skipped }}
     steps:
       - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
         with:
@@ -34,22 +34,51 @@ jobs:
           extra_nix_config: |
             sandbox = true
             accept-flake-config = true
-      - uses: actions/checkout@v6
+      - name: Checkout caller repository
+        uses: actions/checkout@v6
         with:
           persist-credentials: false
-      - uses: ./
-        id: action
+      - name: Checkout action assets
+        uses: actions/checkout@v6
         with:
-          pname: ${{ inputs.pname }}
-          hydra: true
-          nixpkgs-update: false
-          config: ${{ inputs.config }}
+          repository: kachick/nixpkgs-health-check-action
+          path: .action-assets
+          persist-credentials: false
+      - name: Check skip status
+        id: check-skip
+        env:
+          PNAME: ${{ inputs.pname }}
+          CONFIG: ${{ inputs.config }}
+        run: |
+          if [[ -f "$CONFIG" ]]; then
+            json=$(./.action-assets/check-skip.bash --pname "$PNAME" --service "hydra" --config "$CONFIG")
+            skipped=$(echo "$json" | jq -r .skip)
+            reason=$(echo "$json" | jq -r .reason)
+            echo "skipped=$skipped" >> "$GITHUB_OUTPUT"
+            if [[ "$skipped" == "true" ]]; then
+               echo "Skipping $PNAME for hydra. Reason: $reason"
+            fi
+          else
+            echo "skipped=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Run hydra-check
+        if: steps.check-skip.outputs.skipped != 'true'
+        env:
+          PNAME: ${{ inputs.pname }}
+        run: |
+          nix run 'github:NixOS/nixpkgs/nixpkgs-unstable#hydra-check' -- --json --channel=nixpkgs-unstable --eval "$PNAME" | tee raw_hydra.json
+          jq --from-file .action-assets/normalize-hydra-eval.jq raw_hydra.json | tee normalized_hydra.json
+          if jq -e '.[] | select(.severity == "error")' normalized_hydra.json > hydra_errors.jsonl; then
+            echo "::error::Hydra check failed for $PNAME"
+            cat hydra_errors.jsonl
+            exit 1
+          fi
 
   nixpkgs-update:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     outputs:
-      skipped: ${{ steps.action.outputs.nixpkgs_update_skipped }}
+      skipped: ${{ steps.check-skip.outputs.skipped }}
     steps:
       - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
         with:
@@ -57,13 +86,36 @@ jobs:
           extra_nix_config: |
             sandbox = true
             accept-flake-config = true
-      - uses: actions/checkout@v6
+      - name: Checkout caller repository
+        uses: actions/checkout@v6
         with:
           persist-credentials: false
-      - uses: ./
-        id: action
+      - name: Checkout action assets
+        uses: actions/checkout@v6
         with:
-          pname: ${{ inputs.pname }}
-          hydra: false
-          nixpkgs-update: true
-          config: ${{ inputs.config }}
+          repository: kachick/nixpkgs-health-check-action
+          path: .action-assets
+          persist-credentials: false
+      - name: Check skip status
+        id: check-skip
+        env:
+          PNAME: ${{ inputs.pname }}
+          CONFIG: ${{ inputs.config }}
+        run: |
+          if [[ -f "$CONFIG" ]]; then
+            json=$(./.action-assets/check-skip.bash --pname "$PNAME" --service "nixpkgs-update" --config "$CONFIG")
+            skipped=$(echo "$json" | jq -r .skip)
+            reason=$(echo "$json" | jq -r .reason)
+            echo "skipped=$skipped" >> "$GITHUB_OUTPUT"
+            if [[ "$skipped" == "true" ]]; then
+               echo "Skipping $PNAME for nixpkgs-update. Reason: $reason"
+            fi
+          else
+            echo "skipped=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Run nixpkgs-update-log-checker
+        if: steps.check-skip.outputs.skipped != 'true'
+        env:
+          PNAME: ${{ inputs.pname }}
+        run: |
+          nix run 'github:kachick/nixpkgs-update-log-checker' -- --packages "$PNAME"
