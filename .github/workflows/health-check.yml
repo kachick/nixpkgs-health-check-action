@@ -13,13 +13,6 @@ on:
         required: false
         type: boolean
         default: true
-    outputs:
-      hydra_skipped:
-        description: 'Whether hydra check was skipped'
-        value: ${{ jobs.hydra.result == 'skipped' }}
-      nixpkgs_update_skipped:
-        description: 'Whether nixpkgs-update check was skipped'
-        value: ${{ jobs.nixpkgs-update.result == 'skipped' }}
 
 defaults:
   run:
