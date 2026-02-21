@@ -65,10 +65,13 @@ If you use a custom filename or store the config in a subdirectory, you must che
 ```yaml
 jobs:
   check:
-    uses: kachick/nixpkgs-health-check-action/.github/workflows/health-check-by-maintainer.yml@main
-    with:
-      maintainer: 'your-id'
-      config: '.github/my-skip-list.toml' # Specify your config path
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6 # Required to read the config file
+      - uses: kachick/nixpkgs-health-check-action/.github/workflows/health-check-by-maintainer.yml@main
+        with:
+          maintainer: 'your-id'
+          config: '.github/my-skip-list.toml' # Specify your config path
 ```
 
 ## Dependencies
