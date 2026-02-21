@@ -14,7 +14,7 @@ on:
         default: 'kachick' # This should be a "key" of https://github.com/NixOS/nixpkgs/blob/master/maintainers/maintainer-list.nix
       config:
         description: 'Path to the configuration file for skipping checks'
-        required: false
+        required: true
         type: string
         default: 'nixpkgs-health-check.toml'
   workflow_call:
@@ -25,7 +25,7 @@ on:
         type: string
       config:
         description: 'Path to the configuration file for skipping checks'
-        required: false
+        required: true
         type: string
         default: 'nixpkgs-health-check.toml'
   pull_request:

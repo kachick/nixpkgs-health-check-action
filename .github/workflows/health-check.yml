@@ -6,7 +6,7 @@ on:
         required: true
         type: string
       config:
-        required: false
+        required: true
         type: string
         default: 'nixpkgs-health-check.toml'
     outputs:
