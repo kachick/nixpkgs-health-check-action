@@ -15,6 +15,7 @@ jobs:
     uses: ./.github/workflows/health-check.yml
     with:
       pname: 'hello'
+      config: 'nixpkgs-health-check.toml'
 
   assert-hello-skipped:
     needs: test-skip-hello
@@ -42,6 +43,7 @@ jobs:
     uses: ./.github/workflows/health-check.yml
     with:
       pname: 'biz-ud-gothic'
+      config: 'nixpkgs-health-check.toml'
 
   assert-real-ran:
     needs: test-run-real
