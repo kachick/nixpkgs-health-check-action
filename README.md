@@ -45,6 +45,32 @@ jobs:
       maintainer: 'kachick'
 ```
 
+## Advanced Configuration: Skipping Checks
+
+You can skip specific checks for packages with known upstream issues by creating a configuration file (default: `nixpkgs-health-check-by-maintainer.toml`) in your repository.
+
+### Example configuration
+
+```toml
+[skip]
+# package-name = { service-name = "Reason for skipping" }
+typescript-go = { nixpkgs-update = "Failing in nixpkgs-update, see issue #..." }
+hello = { hydra = "Just for testing", nixpkgs-update = "Just for testing" }
+```
+
+### Usage with custom config path
+
+If you use a custom filename or store the config in a subdirectory, you must check out your repository first and provide the path.
+
+```yaml
+jobs:
+  check:
+    uses: kachick/nixpkgs-health-check-action/.github/workflows/health-check-by-maintainer.yml@main
+    with:
+      maintainer: 'your-id'
+      config: '.github/my-skip-list.toml' # Specify your config path
+```
+
 ## Dependencies
 
 - [hydra-check](https://github.com/nix-community/hydra-check)
@@ -55,15 +81,3 @@ jobs:
 
 - Does not check the entire Nixpkgs repository. It only checks for specified packages.
 - Does not check the latest version of upstream. It only checks [nixpkgs-update](https://github.com/nix-community/nixpkgs-update)'s [results](https://nixpkgs-update-logs.nix-community.org/).
-
-## Advanced Configuration
-
-### Skipping Checks
-
-You can skip specific checks for packages with known upstream issues by creating a `nixpkgs-health-check-by-maintainer.toml` file in the root of your repository.
-
-```toml
-[skip]
-# package-name = { service-name = "Reason for skipping" }
-typescript-go = { nixpkgs-update = "Failing in nixpkgs-update, see issue #..." }
-```
