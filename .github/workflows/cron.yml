@@ -1,0 +1,16 @@
+name: Cron check
+
+on:
+  schedule:
+    # Every 10:42 JST
+    - cron: '42 1 * * *'
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    uses: ./.github/workflows/by-maintainer.yml
+    with:
+      maintainer: 'kachick'
+      config: 'nixpkgs-health-check.toml'

@@ -1,17 +1,13 @@
-name: by-maintainer # Keep short for the GitHub Web UI
+name: by-maintainer
 
 on:
-  schedule:
-    # Every 10:42 JST
-    # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#schedule
-    - cron: '42 1 * * *'
   workflow_dispatch:
     inputs:
       maintainer:
         description: 'Maintainer ID of the package'
         required: true
         type: string
-        default: 'kachick' # This should be a "key" of https://github.com/NixOS/nixpkgs/blob/master/maintainers/maintainer-list.nix
+        default: 'kachick'
       config:
         description: 'Path to the configuration file for skipping checks'
         required: true
@@ -23,13 +19,12 @@ on:
         description: 'Maintainer ID of the package'
         required: true
         type: string
+        default: 'kachick'
       config:
         description: 'Path to the configuration file for skipping checks'
         required: true
         type: string
         default: 'nixpkgs-health-check.toml'
-  pull_request:
-    types: [labeled]
 
 permissions:
   contents: read
@@ -40,17 +35,15 @@ defaults:
 
 jobs:
   get-pnames:
-    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'run-maintainer-check')
     runs-on: ubuntu-24.04
     env:
-      MAINTAINER: ${{ inputs.maintainer || 'kachick' }}
+      MAINTAINER: ${{ inputs.maintainer }}
     outputs:
       json: '${{ steps.print-pnames-as-json.outputs.json }}'
     steps:
       - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
         with:
           nix_path: 'nixpkgs=channel:nixpkgs-unstable'
-          # Enable accept-flake-config for using the binary cache
           extra_nix_config: |
             sandbox = true
             accept-flake-config = true
@@ -71,4 +64,4 @@ jobs:
     uses: ./.github/workflows/health-check.yml
     with:
       pname: '${{ matrix.pname }}'
-      config: ${{ inputs.config || 'nixpkgs-health-check.toml' }}
+      config: ${{ inputs.config }}
