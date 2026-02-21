@@ -1,4 +1,4 @@
-name: 🐶 CI Test Runner
+name: 🧪
 
 on:
   pull_request:

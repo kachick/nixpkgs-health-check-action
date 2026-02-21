@@ -1,4 +1,4 @@
-name: 🐶 Dogfood check
+name: 🐶
 
 on:
   schedule:
