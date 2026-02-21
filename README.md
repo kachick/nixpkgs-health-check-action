@@ -6,9 +6,33 @@ This GitHub Action helps ensure that specific Nixpkgs packages are buildable and
 
 ## Usage
 
-This repository has [simple](.github/workflows/health-check.yml) reusable workflow for my personal use.\
-I recommend you write own workflow in your repository.\
-However [my workflow](.github/workflows/by-maintainer.yml) might be an your example.
+### Check single package
+
+You can use this action to check a single package.
+
+```yaml
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: cachix/install-nix-action@v31
+      - uses: kachick/nixpkgs-health-check-action@main
+        with:
+          pname: 'hello'
+```
+
+### Check all packages of a maintainer
+
+You can use the reusable workflow to check all packages maintained by a specific person.
+
+```yaml
+jobs:
+  check:
+    uses: kachick/nixpkgs-health-check-action/.github/workflows/by-maintainer.yml@main
+    with:
+      maintainer: 'kachick'
+```
 
 ## Dependencies
 

@@ -5,6 +5,10 @@ on:
       pname:
         required: true
         type: string
+      config:
+        required: false
+        type: string
+        default: 'nixpkgs-health-check.toml'
     outputs:
       hydra_skipped:
         description: 'Whether hydra check was skipped'
@@ -38,3 +42,4 @@ jobs:
         id: action
         with:
           pname: ${{ inputs.pname }}
+          config: ${{ inputs.config }}
