@@ -13,56 +13,11 @@ inputs:
     description: 'Whether to run nixpkgs-update check'
     default: 'true'
     required: false
-  config:
-    description: 'Path to the skip-list configuration file'
-    default: 'nixpkgs-health-check.toml'
-    required: false
 runs:
   using: 'composite'
   steps:
-    - name: Check skip status
-      id: check-skip
-      shell: bash
-      env:
-        PNAME: ${{ inputs.pname }}
-        CONFIG: ${{ inputs.config }}
-      run: |
-        # Only run check-skip.bash if CONFIG is provided and exists
-        if [[ -n "$CONFIG" && -f "$CONFIG" ]]; then
-          json_hydra=$("${{ github.action_path }}/check-skip.bash" --pname "$PNAME" --service "hydra" --config "$CONFIG")
-          echo "hydra_config_skip=$(echo "$json_hydra" | jq -r .skip)" >> "$GITHUB_OUTPUT"
-
-          json_update=$("${{ github.action_path }}/check-skip.bash" --pname "$PNAME" --service "nixpkgs-update" --config "$CONFIG")
-          echo "update_config_skip=$(echo "$json_update" | jq -r .skip)" >> "$GITHUB_OUTPUT"
-        else
-          echo "hydra_config_skip=false" >> "$GITHUB_OUTPUT"
-          echo "update_config_skip=false" >> "$GITHUB_OUTPUT"
-        fi
-
-    - name: Evaluate final execution flags
-      id: flags
-      shell: bash
-      env:
-        HYDRA_INPUT: ${{ inputs.hydra }}
-        UPDATE_INPUT: ${{ inputs.nixpkgs-update }}
-        HYDRA_CONFIG_SKIP: ${{ steps.check-skip.outputs.hydra_config_skip }}
-        UPDATE_CONFIG_SKIP: ${{ steps.check-skip.outputs.update_config_skip }}
-      run: |
-        # A check runs if: (Input is true) AND (NOT skipped by config)
-        if [[ "$HYDRA_INPUT" == "true" && "$HYDRA_CONFIG_SKIP" != "true" ]]; then
-          echo "run_hydra=true" >> "$GITHUB_OUTPUT"
-        else
-          echo "run_hydra=false" >> "$GITHUB_OUTPUT"
-        fi
-
-        if [[ "$UPDATE_INPUT" == "true" && "$UPDATE_CONFIG_SKIP" != "true" ]]; then
-          echo "run_update=true" >> "$GITHUB_OUTPUT"
-        else
-          echo "run_update=false" >> "$GITHUB_OUTPUT"
-        fi
-
     - name: Run hydra-check
-      if: steps.flags.outputs.run_hydra == 'true'
+      if: inputs.hydra == 'true'
       shell: bash
       env:
         PNAME: ${{ inputs.pname }}
@@ -70,13 +25,13 @@ runs:
         nix run 'github:NixOS/nixpkgs/nixpkgs-unstable#hydra-check' -- --json --channel=nixpkgs-unstable --eval "$PNAME" | tee raw_hydra.json
 
     - name: Normalize Hydra result
-      if: steps.flags.outputs.run_hydra == 'true'
+      if: inputs.hydra == 'true'
       shell: bash
       run: |
         jq --from-file "${{ github.action_path }}/normalize-hydra-eval.jq" raw_hydra.json | tee normalized_hydra.json
 
     - name: Report Hydra errors
-      if: steps.flags.outputs.run_hydra == 'true'
+      if: inputs.hydra == 'true'
       shell: bash
       env:
         PNAME: ${{ inputs.pname }}
@@ -88,7 +43,7 @@ runs:
         fi
 
     - name: Run nixpkgs-update-log-checker
-      if: steps.flags.outputs.run_update == 'true'
+      if: inputs.nixpkgs-update == 'true'
       shell: bash
       env:
         PNAME: ${{ inputs.pname }}
