@@ -4,7 +4,7 @@ set -euo pipefail
 
 PNAME=""
 SERVICE=""
-CONFIG=""
+CONFIG="nixpkgs-health-check.toml"
 # Resolve the directory where the script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -29,8 +29,8 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [[ -z "$PNAME" || -z "$SERVICE" || -z "$CONFIG" ]]; then
-  echo "Usage: $0 --pname <name> --service <hydra|nixpkgs-update> --config <path>"
+if [[ -z "$PNAME" || -z "$SERVICE" ]]; then
+  echo "Usage: $0 --pname <name> --service <hydra|nixpkgs-update> [--config <path>]"
   exit 1
 fi
 
