@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 jobs:
-  check:
+  by-maintainer:
     if: |
       github.event_name == 'schedule' ||
       (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'run-maintainer-check'))
