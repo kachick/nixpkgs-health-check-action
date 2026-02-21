@@ -4,11 +4,12 @@
   configPath,
 }:
 let
-  # Ensure the path is treated correctly.
-  # readFile accepts a string representing an absolute path.
+  # The root cause was path resolution.
+  # configPath must be an absolute path string starting with '/'.
+  # Using it directly with readFile avoids Nix's path concatenation pitfalls.
   config = builtins.fromTOML (builtins.readFile configPath);
 
-  # Helper to safely traverse the attribute set
+  # Basic structure validation to prevent crashes on malformed TOML
   getAttrOrEmpty = s: k: if builtins.isAttrs s && builtins.hasAttr k s then s.${k} else { };
 
   skipConfig = getAttrOrEmpty config "skip";

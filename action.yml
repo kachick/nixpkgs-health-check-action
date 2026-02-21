@@ -27,7 +27,7 @@ runs:
         CONFIG: ${{ inputs.config }}
         SERVICE: ${{ inputs.service }}
       run: |
-        # Resolve config path to absolute path for Nix builtins.readFile
+        # Ensure the config path is absolute for Nix builtins.readFile
         if [[ "$CONFIG" != /* ]]; then
           config_file="$PWD/$CONFIG"
         else
@@ -44,7 +44,7 @@ runs:
         update_skip=$(echo "$json_update" | jq -r .skip)
         update_reason=$(echo "$json_update" | jq -r .reason)
 
-        # Set specific skipped output for current context
+        # Context-aware generic skipped output
         if [[ "$SERVICE" == "hydra" ]]; then
           echo "skipped=$hydra_skip" >> "$GITHUB_OUTPUT"
         elif [[ "$SERVICE" == "nixpkgs-update" ]]; then
@@ -53,7 +53,7 @@ runs:
           echo "skipped=false" >> "$GITHUB_OUTPUT"
         fi
 
-        # Always export specific skips for internal steps
+        # Forward flags for internal steps
         echo "hydra_skip=$hydra_skip" >> "$GITHUB_OUTPUT"
         echo "update_skip=$update_skip" >> "$GITHUB_OUTPUT"
 
