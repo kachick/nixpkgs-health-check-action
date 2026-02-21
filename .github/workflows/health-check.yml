@@ -30,12 +30,20 @@ jobs:
           extra_nix_config: |
             sandbox = true
             accept-flake-config = true
+      - name: Checkout health-check scripts
+        uses: actions/checkout@v6
+        with:
+          repository: kachick/nixpkgs-health-check-action
+          path: .health-check-action
+          # Use the SHA of the current workflow execution to support PR testing
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
       - name: Run hydra-check
         env:
           PNAME: ${{ inputs.pname }}
         run: |
           nix run 'github:NixOS/nixpkgs/nixpkgs-unstable#hydra-check' -- --json --channel=nixpkgs-unstable --eval "$PNAME" | tee raw_hydra.json
-          nix run 'github:kachick/nixpkgs-health-check-action#normalize-hydra' -- raw_hydra.json | tee normalized_hydra.json
+          jq --from-file .health-check-action/normalize-hydra-eval.jq raw_hydra.json | tee normalized_hydra.json
           if jq -e '.[] | select(.severity == "error")' normalized_hydra.json > hydra_errors.jsonl; then
             echo "::error::Hydra check failed for $PNAME"
             cat hydra_errors.jsonl
