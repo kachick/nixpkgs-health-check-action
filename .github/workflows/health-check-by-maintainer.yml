@@ -34,12 +34,13 @@ defaults:
     shell: bash
 
 jobs:
-  get-pnames:
+  plan:
     runs-on: ubuntu-24.04
     env:
       MAINTAINER: ${{ inputs.maintainer }}
+      CONFIG: ${{ inputs.config }}
     outputs:
-      json: '${{ steps.print-pnames-as-json.outputs.json }}'
+      matrix: '${{ steps.generate-matrix.outputs.matrix }}'
     steps:
       - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
         with:
@@ -47,21 +48,52 @@ jobs:
           extra_nix_config: |
             sandbox = true
             accept-flake-config = true
-      - id: print-pnames-as-json
+      - name: Checkout assets for skip-check
+        uses: actions/checkout@v6
+        with:
+          repository: kachick/nixpkgs-health-check-action
+          path: .action-assets
+          persist-credentials: false
+      - name: Checkout caller repo for config
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - id: generate-matrix
         run: |
-          {
-            echo 'json<<JSON'
-            nix run github:kachick/nixpkgs-maintained-by -- -id "$MAINTAINER" -json
-            echo 'JSON'
-          } | tee --append "$GITHUB_OUTPUT"
+          pnames=$(nix run github:kachick/nixpkgs-maintained-by -- -id "$MAINTAINER" -json)
+
+          # Initialize JSON array
+          echo '[]' > matrix.json
+
+          for pname in $(echo "$pnames" | jq -r '.[]'); do
+            # Check skip status for each service
+            if [[ -f "$CONFIG" ]]; then
+              hydra_skip=$(./.action-assets/check-skip.bash --pname "$pname" --service "hydra" --config "$CONFIG" | jq -r .skip)
+              update_skip=$(./.action-assets/check-skip.bash --pname "$pname" --service "nixpkgs-update" --config "$CONFIG" | jq -r .skip)
+            else
+              hydra_skip="false"
+              update_skip="false"
+            fi
+
+            # Append to matrix JSON
+            tmp=$(mktemp)
+            jq --arg pname "$pname" \
+               --arg run_hydra "$([[ "$hydra_skip" != "true" ]] && echo true || echo false)" \
+               --arg run_update "$([[ "$update_skip" != "true" ]] && echo true || echo false)" \
+               '. += [{pname: $pname, run_hydra: ($run_hydra == "true"), run_update: ($run_update == "true")}]' \
+               matrix.json > "$tmp" && mv "$tmp" matrix.json
+          done
+
+          echo "matrix=$(cat matrix.json | jq -c .)" >> "$GITHUB_OUTPUT"
 
   check:
-    needs: [get-pnames]
+    needs: [plan]
     strategy:
       fail-fast: false
       matrix:
-        pname: '${{ fromJson(needs.get-pnames.outputs.json) }}'
+        item: '${{ fromJson(needs.plan.outputs.matrix) }}'
     uses: ./.github/workflows/health-check.yml
     with:
-      pname: '${{ matrix.pname }}'
-      config: ${{ inputs.config }}
+      pname: '${{ matrix.item.pname }}'
+      hydra: ${{ matrix.item.run_hydra }}
+      nixpkgs-update: ${{ matrix.item.run_update }}

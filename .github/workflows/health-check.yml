@@ -1,21 +1,18 @@
-name: 'Nixpkgs health checks'
+name: 'Nixpkgs health check runner'
 on:
   workflow_call:
     inputs:
       pname:
         required: true
         type: string
-      config:
-        required: true
-        type: string
-        default: 'nixpkgs-health-check.toml'
-    outputs:
-      hydra_skipped:
-        description: 'Whether hydra check was skipped'
-        value: ${{ jobs.hydra.outputs.skipped }}
-      nixpkgs_update_skipped:
-        description: 'Whether nixpkgs-update check was skipped'
-        value: ${{ jobs.nixpkgs-update.outputs.skipped }}
+      hydra:
+        required: false
+        type: boolean
+        default: true
+      nixpkgs-update:
+        required: false
+        type: boolean
+        default: true
 
 defaults:
   run:
@@ -23,10 +20,9 @@ defaults:
 
 jobs:
   hydra:
+    if: inputs.hydra
     runs-on: ubuntu-24.04
     timeout-minutes: 30
-    outputs:
-      skipped: ${{ steps.check-skip.outputs.skipped }}
     steps:
       - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
         with:
@@ -34,35 +30,13 @@ jobs:
           extra_nix_config: |
             sandbox = true
             accept-flake-config = true
-      - name: Checkout caller repository
-        uses: actions/checkout@v6
-        with:
-          persist-credentials: false
-      - name: Checkout action assets
+      - name: Checkout runner assets
         uses: actions/checkout@v6
         with:
           repository: kachick/nixpkgs-health-check-action
           path: .action-assets
           persist-credentials: false
-      - name: Check skip status
-        id: check-skip
-        env:
-          PNAME: ${{ inputs.pname }}
-          CONFIG: ${{ inputs.config }}
-        run: |
-          if [[ -f "$CONFIG" ]]; then
-            json=$(./.action-assets/check-skip.bash --pname "$PNAME" --service "hydra" --config "$CONFIG")
-            skipped=$(echo "$json" | jq -r .skip)
-            reason=$(echo "$json" | jq -r .reason)
-            echo "skipped=$skipped" >> "$GITHUB_OUTPUT"
-            if [[ "$skipped" == "true" ]]; then
-               echo "Skipping $PNAME for hydra. Reason: $reason"
-            fi
-          else
-            echo "skipped=false" >> "$GITHUB_OUTPUT"
-          fi
       - name: Run hydra-check
-        if: steps.check-skip.outputs.skipped != 'true'
         env:
           PNAME: ${{ inputs.pname }}
         run: |
@@ -75,10 +49,9 @@ jobs:
           fi
 
   nixpkgs-update:
+    if: inputs.nixpkgs-update
     runs-on: ubuntu-24.04
     timeout-minutes: 30
-    outputs:
-      skipped: ${{ steps.check-skip.outputs.skipped }}
     steps:
       - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
         with:
@@ -86,35 +59,7 @@ jobs:
           extra_nix_config: |
             sandbox = true
             accept-flake-config = true
-      - name: Checkout caller repository
-        uses: actions/checkout@v6
-        with:
-          persist-credentials: false
-      - name: Checkout action assets
-        uses: actions/checkout@v6
-        with:
-          repository: kachick/nixpkgs-health-check-action
-          path: .action-assets
-          persist-credentials: false
-      - name: Check skip status
-        id: check-skip
-        env:
-          PNAME: ${{ inputs.pname }}
-          CONFIG: ${{ inputs.config }}
-        run: |
-          if [[ -f "$CONFIG" ]]; then
-            json=$(./.action-assets/check-skip.bash --pname "$PNAME" --service "nixpkgs-update" --config "$CONFIG")
-            skipped=$(echo "$json" | jq -r .skip)
-            reason=$(echo "$json" | jq -r .reason)
-            echo "skipped=$skipped" >> "$GITHUB_OUTPUT"
-            if [[ "$skipped" == "true" ]]; then
-               echo "Skipping $PNAME for nixpkgs-update. Reason: $reason"
-            fi
-          else
-            echo "skipped=false" >> "$GITHUB_OUTPUT"
-          fi
       - name: Run nixpkgs-update-log-checker
-        if: steps.check-skip.outputs.skipped != 'true'
         env:
           PNAME: ${{ inputs.pname }}
         run: |
