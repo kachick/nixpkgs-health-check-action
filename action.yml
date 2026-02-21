@@ -12,6 +12,10 @@ inputs:
     description: 'Path to the skip-list configuration file'
     default: 'nixpkgs-health-check.toml'
     required: false
+outputs:
+  should_skip:
+    description: 'Whether the check was skipped based on the skip-list'
+    value: ${{ steps.check-skip.outputs.should_skip }}
 runs:
   using: 'composite'
   steps:
