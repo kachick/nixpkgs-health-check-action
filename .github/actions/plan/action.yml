@@ -27,6 +27,8 @@ runs:
         MAINTAINER: ${{ inputs.maintainer }}
         PNAMES: ${{ inputs.pnames }}
         CONFIG: ${{ inputs.config }}
+        # Ensure nixpkgs is available for nix-maintained-by
+        NIX_PATH: nixpkgs=https://channels.nixos.org/nixpkgs-unstable/nixexprs.tar.xz
       run: |
         # Get raw list of pnames
         if [[ -n "$MAINTAINER" ]]; then
@@ -37,13 +39,11 @@ runs:
 
         echo "Input packages: $raw_list"
 
-        # Check skip status for each package using the internal script
         hydra_list="[]"
         update_list="[]"
 
         for pname in $(echo "$raw_list" | jq -r '.[]'); do
           if [[ -f "$CONFIG" ]]; then
-            # Use github.action_path to find the script safely
             hydra_skip=$("${{ github.action_path }}/../../../check-skip.bash" --pname "$pname" --service "hydra" --config "$CONFIG" | jq -r .skip)
             update_skip=$("${{ github.action_path }}/../../../check-skip.bash" --pname "$pname" --service "nixpkgs-update" --config "$CONFIG" | jq -r .skip)
           else

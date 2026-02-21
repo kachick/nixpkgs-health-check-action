@@ -8,7 +8,7 @@ on:
         required: true
         type: string
       config:
-        description: 'Path to the skip-list configuration file'
+        description: 'Path to the configuration file for skipping checks'
         required: true
         type: string
         default: 'nixpkgs-health-check-by-maintainer.toml'
@@ -34,6 +34,7 @@ defaults:
 
 jobs:
   plan:
+    name: runner / plan
     runs-on: ubuntu-24.04
     outputs:
       hydra_matrix: '${{ steps.plan.outputs.hydra_matrix }}'
@@ -58,7 +59,7 @@ jobs:
   hydra:
     needs: [plan]
     if: fromJson(needs.plan.outputs.hydra_matrix)[0] != null
-    name: hydra / ${{ matrix.pname }}
+    name: runner / hydra / ${{ matrix.pname }}
     strategy:
       fail-fast: false
       matrix:
@@ -81,7 +82,7 @@ jobs:
   nixpkgs-update:
     needs: [plan]
     if: fromJson(needs.plan.outputs.update_matrix)[0] != null
-    name: nixpkgs-update / ${{ matrix.pname }}
+    name: runner / update / ${{ matrix.pname }}
     strategy:
       fail-fast: false
       matrix:

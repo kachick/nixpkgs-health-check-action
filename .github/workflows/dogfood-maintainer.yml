@@ -1,4 +1,4 @@
-name: Dogfood maintainer check
+name: 🐶 Dogfood check
 
 on:
   schedule:
@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 jobs:
-  check:
+  dogfood:
     if: |
       github.event_name == 'schedule' ||
       (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'run-maintainer-check'))

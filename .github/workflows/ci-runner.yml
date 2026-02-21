@@ -1,0 +1,19 @@
+name: 🐶 CI Test Runner
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/health-check*'
+      - '.github/actions/**'
+      - 'check-skip.*'
+      - 'nixpkgs-health-check-by-maintainer.toml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    uses: ./.github/workflows/health-check-by-list.yml
+    with:
+      pnames: '["hello", "biz-ud-gothic"]'
+      config: 'nixpkgs-health-check-by-maintainer.toml'

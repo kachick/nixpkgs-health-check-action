@@ -30,7 +30,7 @@ permissions:
   contents: read
 
 jobs:
-  check:
+  collector:
     uses: ./.github/workflows/health-check-by-list.yml
     with:
       maintainer: ${{ inputs.maintainer }}
