@@ -1,0 +1,63 @@
+name: 'Nixpkgs Health Check Planner'
+description: 'Plans the execution matrix by filtering packages against the skip-list'
+inputs:
+  maintainer:
+    description: 'Maintainer ID'
+    required: false
+  pnames:
+    description: 'JSON list of package names'
+    required: false
+  config:
+    description: 'Path to the skip-list configuration file'
+    required: true
+outputs:
+  hydra_matrix:
+    description: 'Filtered JSON list for hydra'
+    value: ${{ steps.generate.outputs.hydra_matrix }}
+  update_matrix:
+    description: 'Filtered JSON list for nixpkgs-update'
+    value: ${{ steps.generate.outputs.update_matrix }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Generate matrix
+      id: generate
+      shell: bash
+      env:
+        MAINTAINER: ${{ inputs.maintainer }}
+        PNAMES: ${{ inputs.pnames }}
+        CONFIG: ${{ inputs.config }}
+      run: |
+        # Get raw list of pnames
+        if [[ -n "$MAINTAINER" ]]; then
+          raw_list=$(nix run github:kachick/nixpkgs-maintained-by -- -id "$MAINTAINER" -json)
+        else
+          raw_list="$PNAMES"
+        fi
+
+        echo "Input packages: $raw_list"
+
+        # Check skip status for each package using the internal script
+        hydra_list="[]"
+        update_list="[]"
+
+        for pname in $(echo "$raw_list" | jq -r '.[]'); do
+          if [[ -f "$CONFIG" ]]; then
+            # Use github.action_path to find the script safely
+            hydra_skip=$("${{ github.action_path }}/../../../check-skip.bash" --pname "$pname" --service "hydra" --config "$CONFIG" | jq -r .skip)
+            update_skip=$("${{ github.action_path }}/../../../check-skip.bash" --pname "$pname" --service "nixpkgs-update" --config "$CONFIG" | jq -r .skip)
+          else
+            hydra_skip="false"
+            update_skip="false"
+          fi
+
+          if [[ "$hydra_skip" != "true" ]]; then
+            hydra_list=$(echo "$hydra_list" | jq -c --arg p "$pname" '. += [$p]')
+          fi
+          if [[ "$update_skip" != "true" ]]; then
+            update_list=$(echo "$update_list" | jq -c --arg p "$pname" '. += [$p]')
+          fi
+        done
+
+        echo "hydra_matrix=$hydra_list" >> "$GITHUB_OUTPUT"
+        echo "update_matrix=$update_list" >> "$GITHUB_OUTPUT"

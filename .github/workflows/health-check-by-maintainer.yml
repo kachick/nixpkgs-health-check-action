@@ -29,74 +29,9 @@ on:
 permissions:
   contents: read
 
-defaults:
-  run:
-    shell: bash
-
 jobs:
-  plan:
-    runs-on: ubuntu-24.04
-    env:
-      MAINTAINER: ${{ inputs.maintainer }}
-    outputs:
-      pnames: '${{ steps.get-pnames.outputs.json }}'
-    steps:
-      - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
-        with:
-          nix_path: 'nixpkgs=channel:nixpkgs-unstable'
-          extra_nix_config: |
-            sandbox = true
-            accept-flake-config = true
-      - id: get-pnames
-        run: |
-          {
-            echo 'json<<JSON'
-            nix run github:kachick/nixpkgs-maintained-by -- -id "$MAINTAINER" -json
-            echo 'JSON'
-          } | tee --append "$GITHUB_OUTPUT"
-
-  hydra:
-    needs: [plan]
-    name: hydra / ${{ matrix.pname }}
-    strategy:
-      fail-fast: false
-      matrix:
-        pname: '${{ fromJson(needs.plan.outputs.pnames) }}'
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
-        with:
-          extra_nix_config: |
-            sandbox = true
-            accept-flake-config = true
-      - uses: actions/checkout@v6
-        with:
-          persist-credentials: false
-      - name: Run hydra check
-        uses: ./.github/actions/hydra
-        with:
-          pname: ${{ matrix.pname }}
-          config: ${{ inputs.config }}
-
-  nixpkgs-update:
-    needs: [plan]
-    name: nixpkgs-update / ${{ matrix.pname }}
-    strategy:
-      fail-fast: false
-      matrix:
-        pname: '${{ fromJson(needs.plan.outputs.pnames) }}'
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
-        with:
-          extra_nix_config: |
-            sandbox = true
-            accept-flake-config = true
-      - uses: actions/checkout@v6
-        with:
-          persist-credentials: false
-      - name: Run update check
-        uses: ./.github/actions/nixpkgs-update
-        with:
-          pname: ${{ matrix.pname }}
-          config: ${{ inputs.config }}
+  check:
+    uses: ./.github/workflows/health-check-by-list.yml
+    with:
+      maintainer: ${{ inputs.maintainer }}
+      config: ${{ inputs.config }}

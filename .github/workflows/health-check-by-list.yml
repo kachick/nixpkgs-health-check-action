@@ -1,0 +1,102 @@
+name: health-check-by-list
+
+on:
+  workflow_dispatch:
+    inputs:
+      pnames:
+        description: 'JSON array of package names'
+        required: true
+        type: string
+      config:
+        description: 'Path to the skip-list configuration file'
+        required: true
+        type: string
+        default: 'nixpkgs-health-check-by-maintainer.toml'
+  workflow_call:
+    inputs:
+      maintainer:
+        required: false
+        type: string
+      pnames:
+        required: false
+        type: string
+      config:
+        required: true
+        type: string
+        default: 'nixpkgs-health-check-by-maintainer.toml'
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    outputs:
+      hydra_matrix: '${{ steps.plan.outputs.hydra_matrix }}'
+      update_matrix: '${{ steps.plan.outputs.update_matrix }}'
+    steps:
+      - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
+        with:
+          extra_nix_config: |
+            sandbox = true
+            accept-flake-config = true
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Plan execution
+        id: plan
+        uses: ./.github/actions/plan
+        with:
+          maintainer: ${{ inputs.maintainer }}
+          pnames: ${{ inputs.pnames }}
+          config: ${{ inputs.config }}
+
+  hydra:
+    needs: [plan]
+    if: fromJson(needs.plan.outputs.hydra_matrix)[0] != null
+    name: hydra / ${{ matrix.pname }}
+    strategy:
+      fail-fast: false
+      matrix:
+        pname: '${{ fromJson(needs.plan.outputs.hydra_matrix) }}'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
+        with:
+          extra_nix_config: |
+            sandbox = true
+            accept-flake-config = true
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Run hydra check
+        uses: ./.github/actions/hydra
+        with:
+          pname: ${{ matrix.pname }}
+
+  nixpkgs-update:
+    needs: [plan]
+    if: fromJson(needs.plan.outputs.update_matrix)[0] != null
+    name: nixpkgs-update / ${{ matrix.pname }}
+    strategy:
+      fail-fast: false
+      matrix:
+        pname: '${{ fromJson(needs.plan.outputs.update_matrix) }}'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
+        with:
+          extra_nix_config: |
+            sandbox = true
+            accept-flake-config = true
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Run update check
+        uses: ./.github/actions/nixpkgs-update
+        with:
+          pname: ${{ matrix.pname }}
