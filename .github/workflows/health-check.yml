@@ -67,4 +67,3 @@ jobs:
           pname: ${{ matrix.item.pname }}
           hydra: ${{ matrix.item.run_hydra }}
           nixpkgs-update: ${{ matrix.item.run_update }}
-          config: ${{ inputs.config }}
