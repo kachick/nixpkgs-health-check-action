@@ -1,0 +1,44 @@
+name: 'Nixpkgs Health Check Planner'
+description: 'Plans the execution matrix by filtering packages against the skip-list'
+inputs:
+  pnames:
+    description: 'JSON list of package names'
+    required: true
+  config:
+    description: 'Path to the skip-list configuration file'
+    required: true
+outputs:
+  matrix:
+    description: 'Filtered JSON list of {pname, hydra, update} objects'
+    value: ${{ steps.generate.outputs.matrix }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Generate matrix
+      id: generate
+      shell: bash
+      env:
+        PNAMES: ${{ inputs.pnames }}
+        CONFIG: ${{ inputs.config }}
+      run: |
+        echo '[]' > matrix.json
+        for pname in $(echo "$PNAMES" | jq -r '.[]'); do
+          if [[ -f "$CONFIG" ]]; then
+            # Safe path resolution via github.action_path
+            hydra_skip=$("${{ github.action_path }}/../../../check-skip.bash" --pname "$pname" --service "hydra" --config "$CONFIG" | jq -r .skip)
+            update_skip=$("${{ github.action_path }}/../../../check-skip.bash" --pname "$pname" --service "nixpkgs-update" --config "$CONFIG" | jq -r .skip)
+          else
+            hydra_skip="false"
+            update_skip="false"
+          fi
+
+          if [[ "$hydra_skip" != "true" || "$update_skip" != "true" ]]; then
+            tmp=$(mktemp)
+            jq -c --arg p "$pname" \
+               --arg run_hydra "$([[ "$hydra_skip" != "true" ]] && echo true || echo false)" \
+               --arg run_update "$([[ "$update_skip" != "true" ]] && echo true || echo false)" \
+               '. += [{pname: $p, run_hydra: ($run_hydra == "true"), run_update: ($run_update == "true")}]' \
+               matrix.json > "$tmp" && mv "$tmp" matrix.json
+          fi
+        done
+        echo "matrix=$(cat matrix.json | jq -c .)" >> "$GITHUB_OUTPUT"
