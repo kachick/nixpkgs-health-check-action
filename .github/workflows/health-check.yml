@@ -25,11 +25,14 @@ jobs:
         env:
           PNAME: ${{ inputs.pname }}
         run: |
-          should_skip=$(nix eval --impure --expr '(import ./check-skip.nix { pname = builtins.getEnv "PNAME"; check = "hydra"; })')
+          json=$(nix eval --impure --json --expr '(import ./check-skip.nix { pname = builtins.getEnv "PNAME"; check = "hydra"; })')
+          should_skip=$(echo "$json" | jq -r .skip)
+          reason=$(echo "$json" | jq -r .reason)
+          
           echo "should_skip=$should_skip" | tee --append "$GITHUB_OUTPUT"
-
+          
           if [[ "$should_skip" == "true" ]]; then
-             echo "Skipping $PNAME for hydra as per configuration"
+             echo "Skipping $PNAME for hydra. Reason: $reason"
           fi
       - name: Run hydra-check
         if: steps.check-skip.outputs.should_skip != 'true'
@@ -62,11 +65,14 @@ jobs:
         env:
           PNAME: ${{ inputs.pname }}
         run: |
-          should_skip=$(nix eval --impure --expr '(import ./check-skip.nix { pname = builtins.getEnv "PNAME"; check = "nixpkgs_update"; })')
+          json=$(nix eval --impure --json --expr '(import ./check-skip.nix { pname = builtins.getEnv "PNAME"; check = "nixpkgs-update"; })')
+          should_skip=$(echo "$json" | jq -r .skip)
+          reason=$(echo "$json" | jq -r .reason)
+          
           echo "should_skip=$should_skip" | tee --append "$GITHUB_OUTPUT"
-
+          
           if [[ "$should_skip" == "true" ]]; then
-             echo "Skipping $PNAME for nixpkgs-update as per configuration"
+             echo "Skipping $PNAME for nixpkgs-update. Reason: $reason"
           fi
       - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
         if: steps.check-skip.outputs.should_skip != 'true'

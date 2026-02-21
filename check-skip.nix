@@ -2,6 +2,9 @@
 let
   config = builtins.fromTOML (builtins.readFile ./health-check-skips.toml);
   packageConfig = if builtins.hasAttr pname config then config.${pname} else { };
-  key = "skip_${check}";
+  hasCheck = builtins.hasAttr check packageConfig;
 in
-if builtins.hasAttr key packageConfig then packageConfig.${key} else false
+{
+  skip = hasCheck;
+  reason = if hasCheck then packageConfig.${check} else "";
+}
