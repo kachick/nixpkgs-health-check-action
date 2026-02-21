@@ -8,10 +8,6 @@ inputs:
     description: 'Path to the skip-list configuration file'
     default: 'nixpkgs-health-check.toml'
     required: false
-outputs:
-  skipped:
-    description: 'Whether the check was skipped'
-    value: ${{ steps.check-skip.outputs.skipped }}
 runs:
   using: 'composite'
   steps:
@@ -26,16 +22,14 @@ runs:
         if [[ -f "$CONFIG" ]]; then
           json=$("${{ github.action_path }}/../../../check-skip.bash" --pname "$PNAME" --service "hydra" --config "$CONFIG")
           skipped=$(echo "$json" | jq -r .skip)
-          echo "skipped=$skipped" >> "$GITHUB_OUTPUT"
           if [[ "$skipped" == "true" ]]; then
              echo "Skipping $PNAME for hydra. Reason: $(echo "$json" | jq -r .reason)"
+             echo "should_skip=true" >> "$GITHUB_OUTPUT"
           fi
-        else
-          echo "skipped=false" >> "$GITHUB_OUTPUT"
         fi
 
     - name: Run hydra-check
-      if: steps.check-skip.outputs.skipped != 'true'
+      if: steps.check-skip.outputs.should_skip != 'true'
       shell: bash
       env:
         PNAME: ${{ inputs.pname }}
