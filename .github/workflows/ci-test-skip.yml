@@ -1,0 +1,36 @@
+name: CI Test Skip Logic
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/health-check.yml'
+      - 'check-skip.nix'
+      - 'nixpkgs-health-check.toml'
+      - '.github/workflows/ci-test-skip.yml'
+
+jobs:
+  test-skip-all:
+    uses: ./.github/workflows/health-check.yml
+    with:
+      pname: 'hello'
+
+  assert-skipped:
+    needs: test-skip-all
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check outputs
+        env:
+          HYDRA_SKIPPED: ${{ needs.test-skip-all.outputs.hydra_skipped }}
+          NIXPKGS_UPDATE_SKIPPED: ${{ needs.test-skip-all.outputs.nixpkgs_update_skipped }}
+        run: |
+          echo "Hydra skipped: $HYDRA_SKIPPED"
+          echo "Nixpkgs-update skipped: $NIXPKGS_UPDATE_SKIPPED"
+
+          if [[ "$HYDRA_SKIPPED" != "true" ]]; then
+            echo "Error: Hydra check should have been skipped for 'hello'"
+            exit 1
+          fi
+
+          if [[ "$NIXPKGS_UPDATE_SKIPPED" != "true" ]]; then
+            echo "Error: Nixpkgs-update check should have been skipped for 'hello'"
+            exit 1
+          fi

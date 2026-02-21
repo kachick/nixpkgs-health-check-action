@@ -5,6 +5,13 @@ on:
       pname:
         required: true
         type: string
+    outputs:
+      hydra_skipped:
+        description: 'Whether hydra check was skipped'
+        value: ${{ jobs.hydra.outputs.skipped }}
+      nixpkgs_update_skipped:
+        description: 'Whether nixpkgs-update check was skipped'
+        value: ${{ jobs.nixpkgs-update.outputs.skipped }}
 
 defaults:
   run:
@@ -14,6 +21,8 @@ jobs:
   hydra:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    outputs:
+      skipped: ${{ steps.check-skip.outputs.should_skip }}
     steps:
       - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
       # Using `--eval` to check all platforms. See https://github.com/nix-community/hydra-check/issues/91
@@ -56,6 +65,8 @@ jobs:
   nixpkgs-update:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    outputs:
+      skipped: ${{ steps.check-skip.outputs.should_skip }}
     steps:
       - uses: actions/checkout@v6
         with:
