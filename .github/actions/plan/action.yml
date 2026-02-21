@@ -11,12 +11,9 @@ inputs:
     description: 'Path to the skip-list configuration file'
     required: true
 outputs:
-  hydra_matrix:
-    description: 'Filtered JSON list for hydra'
-    value: ${{ steps.generate.outputs.hydra_matrix }}
-  update_matrix:
-    description: 'Filtered JSON list for nixpkgs-update'
-    value: ${{ steps.generate.outputs.update_matrix }}
+  matrix:
+    description: 'Flat JSON list of {pname, service} objects to execute'
+    value: ${{ steps.generate.outputs.matrix }}
 runs:
   using: 'composite'
   steps:
@@ -29,32 +26,25 @@ runs:
         CONFIG: ${{ inputs.config }}
       run: |
         if [[ -n "$MAINTAINER" ]]; then
-          raw_list=$(nix run github:kachick/nixpkgs-maintained-by -- -id "$MAINTAINER" -json)
+          pnames=$(nix run github:kachick/nixpkgs-maintained-by -- -id "$MAINTAINER" -json)
         else
-          raw_list="$PNAMES"
+          pnames="$PNAMES"
         fi
 
-        hydra_list="[]"
-        update_list="[]"
+        echo '[]' > matrix.json
+        for pname in $(echo "$pnames" | jq -r '.[]'); do
+          for service in "hydra" "nixpkgs-update"; do
+            if [[ -f "$CONFIG" ]]; then
+              skip=$(./.health-check-action/check-skip.bash --pname "$pname" --service "$service" --config "$CONFIG" | jq -r .skip)
+            else
+              skip="false"
+            fi
 
-        for pname in $(echo "$raw_list" | jq -r '.[]'); do
-          if [[ -f "$CONFIG" ]]; then
-            # Simple skip check
-            hydra_skip=$("${{ github.action_path }}/../../../check-skip.bash" --pname "$pname" --service "hydra" --config "$CONFIG" | jq -r .skip)
-            update_skip=$("${{ github.action_path }}/../../../check-skip.bash" --pname "$pname" --service "nixpkgs-update" --config "$CONFIG" | jq -r .skip)
-          else
-            hydra_skip="false"
-            update_skip="false"
-          fi
-
-          # Output clean pname lists
-          if [[ "$hydra_skip" != "true" ]]; then
-            hydra_list=$(echo "$hydra_list" | jq -c --arg p "$pname" '. += [$p]')
-          fi
-          if [[ "$update_skip" != "true" ]]; then
-            update_list=$(echo "$update_list" | jq -c --arg p "$pname" '. += [$p]')
-          fi
+            if [[ "$skip" != "true" ]]; then
+              tmp=$(mktemp)
+              jq -c --arg p "$pname" --arg s "$service" '. += [{pname: $p, service: $s}]' matrix.json > "$tmp" && mv "$tmp" matrix.json
+            fi
+          done
         done
 
-        echo "hydra_matrix=$hydra_list" >> "$GITHUB_OUTPUT"
-        echo "update_matrix=$update_list" >> "$GITHUB_OUTPUT"
+        echo "matrix=$(cat matrix.json | jq -c .)" >> "$GITHUB_OUTPUT"

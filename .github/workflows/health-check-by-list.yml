@@ -37,8 +37,7 @@ jobs:
     name: plan
     runs-on: ubuntu-24.04
     outputs:
-      hydra_matrix: '${{ steps.plan.outputs.hydra_matrix }}'
-      update_matrix: '${{ steps.plan.outputs.update_matrix }}'
+      matrix: '${{ steps.plan.outputs.matrix }}'
     steps:
       - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
         with:
@@ -57,14 +56,14 @@ jobs:
           pnames: ${{ inputs.pnames }}
           config: ${{ inputs.config }}
 
-  hydra:
+  check:
     needs: [plan]
-    if: fromJson(needs.plan.outputs.hydra_matrix)[0] != null
-    name: hydra / ${{ matrix.pname }}
+    if: fromJson(needs.plan.outputs.matrix)[0] != null
+    name: ${{ matrix.item.pname }} / ${{ matrix.item.service }}
     strategy:
       fail-fast: false
       matrix:
-        pname: '${{ fromJson(needs.plan.outputs.hydra_matrix) }}'
+        item: '${{ fromJson(needs.plan.outputs.matrix) }}'
     runs-on: ubuntu-24.04
     steps:
       - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
@@ -76,31 +75,15 @@ jobs:
       - uses: actions/checkout@v6
         with:
           persist-credentials: false
+
       - name: Run hydra check
+        if: matrix.item.service == 'hydra'
         uses: ./.github/actions/hydra
         with:
-          pname: ${{ matrix.pname }}
+          pname: ${{ matrix.item.pname }}
 
-  nixpkgs-update:
-    needs: [plan]
-    if: fromJson(needs.plan.outputs.update_matrix)[0] != null
-    name: update / ${{ matrix.pname }}
-    strategy:
-      fail-fast: false
-      matrix:
-        pname: '${{ fromJson(needs.plan.outputs.update_matrix) }}'
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
-        with:
-          nix_path: 'nixpkgs=channel:nixpkgs-unstable'
-          extra_nix_config: |
-            sandbox = true
-            accept-flake-config = true
-      - uses: actions/checkout@v6
-        with:
-          persist-credentials: false
       - name: Run update check
+        if: matrix.item.service == 'nixpkgs-update'
         uses: ./.github/actions/nixpkgs-update
         with:
-          pname: ${{ matrix.pname }}
+          pname: ${{ matrix.item.pname }}

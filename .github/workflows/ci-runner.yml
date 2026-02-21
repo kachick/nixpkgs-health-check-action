@@ -31,21 +31,22 @@ jobs:
           config: 'nixpkgs-health-check-by-maintainer.toml'
       - name: Assertions
         env:
-          HYDRA_JSON: ${{ steps.plan.outputs.hydra_matrix }}
-          UPDATE_JSON: ${{ steps.plan.outputs.update_matrix }}
+          MATRIX_JSON: ${{ steps.plan.outputs.matrix }}
         run: |
-          echo "Generated Hydra Matrix: $HYDRA_JSON"
-          echo "Generated Update Matrix: $UPDATE_JSON"
+          echo "Generated Matrix: $MATRIX_JSON"
 
-          # 1. Assert 'hello' is REMOVED (skipped)
-          if echo "$HYDRA_JSON" | jq -e '. | contains(["hello"])' > /dev/null; then echo "Error: hello should be skipped for hydra"; exit 1; fi
-          if echo "$UPDATE_JSON" | jq -e '. | contains(["hello"])' > /dev/null; then echo "Error: hello should be skipped for nixpkgs-update"; exit 1; fi
+          # Helper to check if a specific pair exists
+          exists() { echo "$1" | jq -e --arg p "$2" --arg s "$3" '.[] | select(.pname == $p and .service == $s)' > /dev/null; }
 
-          # 2. Assert 'biz-ud-gothic' is INCLUDED (not skipped)
-          if ! echo "$HYDRA_JSON" | jq -e '. | contains(["biz-ud-gothic"])' > /dev/null; then echo "Error: biz-ud-gothic should be included for hydra"; exit 1; fi
-          if ! echo "$UPDATE_JSON" | jq -e '. | contains(["biz-ud-gothic"])' > /dev/null; then echo "Error: biz-ud-gothic should be included for nixpkgs-update"; exit 1; fi
+          # 1. Assert 'hello' is COMPLETELY REMOVED
+          if exists "$MATRIX_JSON" "hello" "hydra"; then echo "Error: hello hydra should be skipped"; exit 1; fi
+          if exists "$MATRIX_JSON" "hello" "nixpkgs-update"; then echo "Error: hello update should be skipped"; exit 1; fi
 
-          echo "Assertion passed: hello was correctly skipped, and biz-ud-gothic was correctly included."
+          # 2. Assert 'biz-ud-gothic' is INCLUDED for both services
+          if ! exists "$MATRIX_JSON" "biz-ud-gothic" "hydra"; then echo "Error: biz-ud-gothic hydra should be included"; exit 1; fi
+          if ! exists "$MATRIX_JSON" "biz-ud-gothic" "nixpkgs-update"; then echo "Error: biz-ud-gothic update should be included"; exit 1; fi
+
+          echo "Assertion passed: Matrix filtered correctly by (package, service) pairs."
 
   # Job 2: Run the actual workflow to ensure it doesn't crash
   workflow-integration:
