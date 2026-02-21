@@ -14,32 +14,33 @@ inputs:
     default: 'true'
     required: false
   config:
-    description: 'Path to the skip-list configuration file (optional for single package checks)'
-    default: ''
+    description: 'Path to the skip-list configuration file'
+    default: 'nixpkgs-health-check.toml'
     required: false
 runs:
   using: 'composite'
   steps:
-    - name: Check skip status from config
-      if: inputs.config != ''
+    - name: Check skip status
       id: check-skip
       shell: bash
       env:
         PNAME: ${{ inputs.pname }}
         CONFIG: ${{ inputs.config }}
       run: |
-        # Check Hydra skip status from config
-        json_hydra=$("${{ github.action_path }}/check-skip.bash" --pname "$PNAME" --service "hydra" --config "$CONFIG")
-        echo "hydra_config_skip=$(echo "$json_hydra" | jq -r .skip)" >> "$GITHUB_OUTPUT"
-        echo "hydra_reason=$(echo "$json_hydra" | jq -r .reason)" >> "$GITHUB_OUTPUT"
+        # Only run check-skip.bash if CONFIG is provided and exists
+        if [[ -n "$CONFIG" && -f "$CONFIG" ]]; then
+          json_hydra=$("${{ github.action_path }}/check-skip.bash" --pname "$PNAME" --service "hydra" --config "$CONFIG")
+          echo "hydra_config_skip=$(echo "$json_hydra" | jq -r .skip)" >> "$GITHUB_OUTPUT"
 
-        # Check nixpkgs-update skip status from config
-        json_update=$("${{ github.action_path }}/check-skip.bash" --pname "$PNAME" --service "nixpkgs-update" --config "$CONFIG")
-        echo "update_config_skip=$(echo "$json_update" | jq -r .skip)" >> "$GITHUB_OUTPUT"
-        echo "update_reason=$(echo "$json_update" | jq -r .reason)" >> "$GITHUB_OUTPUT"
+          json_update=$("${{ github.action_path }}/check-skip.bash" --pname "$PNAME" --service "nixpkgs-update" --config "$CONFIG")
+          echo "update_config_skip=$(echo "$json_update" | jq -r .skip)" >> "$GITHUB_OUTPUT"
+        else
+          echo "hydra_config_skip=false" >> "$GITHUB_OUTPUT"
+          echo "update_config_skip=false" >> "$GITHUB_OUTPUT"
+        fi
 
-    - name: Evaluate final skip status
-      id: final-status
+    - name: Evaluate final execution flags
+      id: flags
       shell: bash
       env:
         HYDRA_INPUT: ${{ inputs.hydra }}
@@ -47,14 +48,13 @@ runs:
         HYDRA_CONFIG_SKIP: ${{ steps.check-skip.outputs.hydra_config_skip }}
         UPDATE_CONFIG_SKIP: ${{ steps.check-skip.outputs.update_config_skip }}
       run: |
-        # Hydra should run if input is true AND config doesn't skip it
+        # A check runs if: (Input is true) AND (NOT skipped by config)
         if [[ "$HYDRA_INPUT" == "true" && "$HYDRA_CONFIG_SKIP" != "true" ]]; then
           echo "run_hydra=true" >> "$GITHUB_OUTPUT"
         else
           echo "run_hydra=false" >> "$GITHUB_OUTPUT"
         fi
 
-        # nixpkgs-update should run if input is true AND config doesn't skip it
         if [[ "$UPDATE_INPUT" == "true" && "$UPDATE_CONFIG_SKIP" != "true" ]]; then
           echo "run_update=true" >> "$GITHUB_OUTPUT"
         else
@@ -62,7 +62,7 @@ runs:
         fi
 
     - name: Run hydra-check
-      if: steps.final-status.outputs.run_hydra == 'true'
+      if: steps.flags.outputs.run_hydra == 'true'
       shell: bash
       env:
         PNAME: ${{ inputs.pname }}
@@ -70,13 +70,13 @@ runs:
         nix run 'github:NixOS/nixpkgs/nixpkgs-unstable#hydra-check' -- --json --channel=nixpkgs-unstable --eval "$PNAME" | tee raw_hydra.json
 
     - name: Normalize Hydra result
-      if: steps.final-status.outputs.run_hydra == 'true'
+      if: steps.flags.outputs.run_hydra == 'true'
       shell: bash
       run: |
         jq --from-file "${{ github.action_path }}/normalize-hydra-eval.jq" raw_hydra.json | tee normalized_hydra.json
 
     - name: Report Hydra errors
-      if: steps.final-status.outputs.run_hydra == 'true'
+      if: steps.flags.outputs.run_hydra == 'true'
       shell: bash
       env:
         PNAME: ${{ inputs.pname }}
@@ -88,7 +88,7 @@ runs:
         fi
 
     - name: Run nixpkgs-update-log-checker
-      if: steps.final-status.outputs.run_update == 'true'
+      if: steps.flags.outputs.run_update == 'true'
       shell: bash
       env:
         PNAME: ${{ inputs.pname }}
