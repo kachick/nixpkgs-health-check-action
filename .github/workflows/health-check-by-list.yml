@@ -34,7 +34,7 @@ defaults:
 
 jobs:
   plan:
-    name: runner / plan
+    name: plan
     runs-on: ubuntu-24.04
     outputs:
       hydra_matrix: '${{ steps.plan.outputs.hydra_matrix }}'
@@ -60,7 +60,7 @@ jobs:
   hydra:
     needs: [plan]
     if: fromJson(needs.plan.outputs.hydra_matrix)[0] != null
-    name: runner / hydra / ${{ matrix.pname }}
+    name: hydra / ${{ matrix.pname }}
     strategy:
       fail-fast: false
       matrix:
@@ -84,7 +84,7 @@ jobs:
   nixpkgs-update:
     needs: [plan]
     if: fromJson(needs.plan.outputs.update_matrix)[0] != null
-    name: runner / update / ${{ matrix.pname }}
+    name: update / ${{ matrix.pname }}
     strategy:
       fail-fast: false
       matrix:
