@@ -15,7 +15,7 @@ jobs:
     if: |
       github.event_name == 'schedule' ||
       (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'run-maintainer-check'))
-    uses: ./.github/workflows/health-check.yml
+    uses: ./.github/workflows/health-check-by-maintainer.yml
     with:
       maintainer: 'kachick'
       config: 'nixpkgs-health-check-by-maintainer.toml'

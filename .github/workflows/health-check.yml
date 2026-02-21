@@ -3,14 +3,9 @@ name: health-check
 on:
   workflow_dispatch:
     inputs:
-      maintainer:
-        description: 'Maintainer ID of the package'
-        required: false
-        type: string
-        default: 'kachick'
       pnames:
         description: 'JSON array of package names'
-        required: false
+        required: true
         type: string
       config:
         description: 'Path to the configuration file for skipping checks'
@@ -19,13 +14,12 @@ on:
         default: 'nixpkgs-health-check-by-maintainer.toml'
   workflow_call:
     inputs:
-      maintainer:
-        required: false
-        type: string
       pnames:
-        required: false
+        description: 'JSON array of package names'
+        required: true
         type: string
       config:
+        description: 'Path to the configuration file for skipping checks'
         required: true
         type: string
         default: 'nixpkgs-health-check-by-maintainer.toml'
@@ -63,7 +57,6 @@ jobs:
         id: plan
         uses: ./.github/actions/plan
         with:
-          maintainer: ${{ inputs.maintainer }}
           pnames: ${{ inputs.pnames }}
           config: ${{ inputs.config }}
 
@@ -79,6 +72,7 @@ jobs:
     steps:
       - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
         with:
+          nix_path: 'nixpkgs=channel:nixpkgs-unstable'
           extra_nix_config: |
             sandbox = true
             accept-flake-config = true
