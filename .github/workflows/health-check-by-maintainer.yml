@@ -12,7 +12,7 @@ on:
         description: 'Path to the configuration file for skipping checks'
         required: true
         type: string
-        default: 'health-check-by-maintainer.toml'
+        default: 'nixpkgs-health-check-by-maintainer.toml'
   workflow_call:
     inputs:
       maintainer:
@@ -24,7 +24,7 @@ on:
         description: 'Path to the configuration file for skipping checks'
         required: true
         type: string
-        default: 'health-check-by-maintainer.toml'
+        default: 'nixpkgs-health-check-by-maintainer.toml'
 
 permissions:
   contents: read

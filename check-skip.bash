@@ -4,7 +4,7 @@ set -euo pipefail
 
 PNAME=""
 SERVICE=""
-CONFIG="health-check-by-maintainer.toml"
+CONFIG="nixpkgs-health-check-by-maintainer.toml"
 # Resolve the directory where the script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
