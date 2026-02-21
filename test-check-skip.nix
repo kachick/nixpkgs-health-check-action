@@ -32,6 +32,7 @@ let
       result = checkSkip {
         pname = tc.pname;
         service = tc.service;
+        configPath = toString ./nixpkgs-health-check.toml;
       };
       status = if result.skip == tc.expectedSkip then "PASS" else "FAIL";
     in

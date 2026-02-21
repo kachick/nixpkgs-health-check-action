@@ -1,0 +1,82 @@
+name: 'Nixpkgs Health Check'
+description: 'Checks the health of a Nixpkgs package using hydra-check and nixpkgs-update logs'
+author: 'kachick'
+inputs:
+  pname:
+    description: 'Package name in Nixpkgs'
+    required: true
+  config:
+    description: 'Path to the configuration file for skipping checks'
+    default: 'nixpkgs-health-check.toml'
+    required: false
+outputs:
+  hydra_skipped:
+    description: "Whether hydra check was skipped"
+    value: ${{ steps.check-skip.outputs.hydra_skip }}
+  nixpkgs_update_skipped:
+    description: "Whether nixpkgs-update check was skipped"
+    value: ${{ steps.check-skip.outputs.update_skip }}
+runs:
+  using: "composite"
+  steps:
+    - name: Check skip status
+      id: check-skip
+      shell: bash
+      env:
+        PNAME: ${{ inputs.pname }}
+        CONFIG: ${{ inputs.config }}
+      run: |
+        # Check Hydra skip status
+        json=$("${{ github.action_path }}/check-skip.bash" --pname "$PNAME" --service "hydra" --config "$CONFIG")
+        hydra_skip=$(echo "$json" | jq -r .skip)
+        hydra_reason=$(echo "$json" | jq -r .reason)
+
+        # Check nixpkgs-update skip status
+        json=$("${{ github.action_path }}/check-skip.bash" --pname "$PNAME" --service "nixpkgs-update" --config "$CONFIG")
+        update_skip=$(echo "$json" | jq -r .skip)
+        update_reason=$(echo "$json" | jq -r .reason)
+
+        echo "hydra_skip=$hydra_skip" >> $GITHUB_OUTPUT
+        echo "update_skip=$update_skip" >> $GITHUB_OUTPUT
+        
+        if [[ "$hydra_skip" == "true" ]]; then
+           echo "Skipping Hydra check for $PNAME: $hydra_reason"
+        fi
+        if [[ "$update_skip" == "true" ]]; then
+           echo "Skipping nixpkgs-update check for $PNAME: $update_reason"
+        fi
+
+    - name: Run hydra-check
+      if: steps.check-skip.outputs.hydra_skip != 'true'
+      shell: bash
+      env:
+        PNAME: ${{ inputs.pname }}
+      run: |
+        nix run 'github:NixOS/nixpkgs/nixpkgs-unstable#hydra-check' -- --json --channel=nixpkgs-unstable --eval 
+          "$PNAME" | tee raw_hydra.json
+
+    - name: Normalize Hydra result
+      if: steps.check-skip.outputs.hydra_skip != 'true'
+      shell: bash
+      run: |
+        jq --from-file "${{ github.action_path }}/normalize-hydra-eval.jq" raw_hydra.json | tee normalized_hydra.json
+
+    - name: Report Hydra errors
+      if: steps.check-skip.outputs.hydra_skip != 'true'
+      shell: bash
+      env:
+        PNAME: ${{ inputs.pname }}
+      run: |
+        if jq -e '.[] | select(.severity == "error")' normalized_hydra.json > hydra_errors.jsonl; then
+          echo "::error::Hydra check failed for $PNAME"
+          cat hydra_errors.jsonl
+          exit 1
+        fi
+
+    - name: Run nixpkgs-update-log-checker
+      if: steps.check-skip.outputs.update_skip != 'true'
+      shell: bash
+      env:
+        PNAME: ${{ inputs.pname }}
+      run: |
+        nix run 'github:kachick/nixpkgs-update-log-checker' -- --packages "$PNAME"
