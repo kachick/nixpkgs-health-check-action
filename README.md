@@ -8,21 +8,24 @@ This GitHub Action helps ensure that specific Nixpkgs packages are buildable and
 
 ### Check single package
 
-You can use the reusable workflow to check a single package.
-It will automatically separate `hydra` and `nixpkgs-update` into different jobs in the GitHub UI.
+You can use the composite actions to check a single package.
 
 ```yaml
 jobs:
   check:
-    uses: kachick/nixpkgs-health-check-action/.github/workflows/health-check.yml@main
-    with:
-      pname: 'hello'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: cachix/install-nix-action@v31
+      - uses: kachick/nixpkgs-health-check-action/.github/actions/hydra@main
+        with:
+          pname: 'hello'
 ```
 
 ### Check all packages of a maintainer (with skip-list support)
 
 You can use the reusable workflow to check all packages maintained by a specific person.
-It uses a `nixpkgs-health-check-by-maintainer.toml` file for skip-list by default.
+It automatically parallelizes checks for each package and service.
 
 ```yaml
 jobs:
