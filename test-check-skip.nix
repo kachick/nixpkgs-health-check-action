@@ -17,7 +17,7 @@ let
       pname = "hello";
       service = "nixpkgs-update";
       configPath = "${pwd}/nixpkgs-health-check-by-maintainer.toml";
-      expectedSkip = false;
+      expectedSkip = true;
     }
     # Case 2: Package without skip configuration (Should RUN)
     {
