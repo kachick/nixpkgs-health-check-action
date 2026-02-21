@@ -4,7 +4,7 @@ on:
   pull_request:
     paths:
       - '.github/workflows/health-check*'
-      - '.github/actions/**'
+      - 'action.yml'
       - 'check-skip.*'
       - 'nixpkgs-health-check-by-maintainer.toml'
 
@@ -23,19 +23,35 @@ jobs:
       - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
         with:
           nix_path: 'nixpkgs=channel:nixpkgs-unstable'
-      - name: Run plan action directly
+      - name: Generate matrix (Plan)
         id: plan
-        uses: ./.github/actions/plan
-        with:
-          pnames: '["hello", "biz-ud-gothic"]'
-          config: 'nixpkgs-health-check-by-maintainer.toml'
+        env:
+          PNAMES: '["hello", "biz-ud-gothic"]'
+          CONFIG: 'nixpkgs-health-check-by-maintainer.toml'
+        run: |
+          echo '[]' > matrix.json
+          for pname in $(echo "$PNAMES" | jq -r '.[]'); do
+            if [[ -f "$CONFIG" ]]; then
+              hydra_skip=$(./check-skip.bash --pname "$pname" --service "hydra" --config "$CONFIG" | jq -r .skip)
+              update_skip=$(./check-skip.bash --pname "$pname" --service "nixpkgs-update" --config "$CONFIG" | jq -r .skip)
+            else
+              hydra_skip="false"; update_skip="false"
+            fi
+
+            if [[ "$hydra_skip" != "true" || "$update_skip" != "true" ]]; then
+              tmp=$(mktemp)
+              jq -c --arg p "$pname" '. += [$p]' matrix.json > "$tmp" && mv "$tmp" matrix.json
+            fi
+          done
+          echo "matrix=$(cat matrix.json | jq -c .)" >> "$GITHUB_OUTPUT"
+
       - name: Assertions
         env:
           MATRIX_JSON: ${{ steps.plan.outputs.matrix }}
         run: |
           echo "Generated Matrix: $MATRIX_JSON"
 
-          # 1. Assert 'hello' is REMOVED from the list (because all services are skipped)
+          # 1. Assert 'hello' is REMOVED
           if echo "$MATRIX_JSON" | jq -e '. | contains(["hello"])' > /dev/null; then echo "Error: hello should be fully filtered out"; exit 1; fi
 
           # 2. Assert 'biz-ud-gothic' is INCLUDED
