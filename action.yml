@@ -27,25 +27,36 @@ runs:
         CONFIG: ${{ inputs.config }}
         SERVICE: ${{ inputs.service }}
       run: |
+        # Resolve config path to absolute path for Nix
+        if [[ "$CONFIG" = /* ]]; then
+          config_file="$CONFIG"
+        else
+          config_file="$PWD/$CONFIG"
+        fi
+
         # Check Hydra skip status
-        json_hydra=$("${{ github.action_path }}/check-skip.bash" --pname "$PNAME" --service "hydra" --config "$CONFIG")
+        json_hydra=$("${{ github.action_path }}/check-skip.bash" --pname "$PNAME" --service "hydra" --config "$config_file")
         hydra_skip=$(echo "$json_hydra" | jq -r .skip)
         hydra_reason=$(echo "$json_hydra" | jq -r .reason)
 
         # Check nixpkgs-update skip status
-        json_update=$("${{ github.action_path }}/check-skip.bash" --pname "$PNAME" --service "nixpkgs-update" --config "$CONFIG")
+        json_update=$("${{ github.action_path }}/check-skip.bash" --pname "$PNAME" --service "nixpkgs-update" --config "$config_file")
         update_skip=$(echo "$json_update" | jq -r .skip)
         update_reason=$(echo "$json_update" | jq -r .reason)
 
-        # Set generic skipped output based on the requested service
+        # Generic skipped output for workflow context
         if [[ "$SERVICE" == "hydra" ]]; then
           echo "skipped=$hydra_skip" >> "$GITHUB_OUTPUT"
         elif [[ "$SERVICE" == "nixpkgs-update" ]]; then
           echo "skipped=$update_skip" >> "$GITHUB_OUTPUT"
         else
-          # If no service specified, skipped is false (both will be checked inside action)
+          # Fallback for general usage
           echo "skipped=false" >> "$GITHUB_OUTPUT"
         fi
+
+        # Store internal flags for individual steps
+        echo "hydra_skip=$hydra_skip" >> "$GITHUB_OUTPUT"
+        echo "update_skip=$update_skip" >> "$GITHUB_OUTPUT"
 
         if [[ "$hydra_skip" == "true" ]]; then
            echo "Skipping Hydra check for $PNAME: $hydra_reason"
@@ -53,10 +64,6 @@ runs:
         if [[ "$update_skip" == "true" ]]; then
            echo "Skipping nixpkgs-update check for $PNAME: $update_reason"
         fi
-
-        # Pass specific skips to internal steps
-        echo "hydra_skip=$hydra_skip" >> "$GITHUB_OUTPUT"
-        echo "update_skip=$update_skip" >> "$GITHUB_OUTPUT"
 
     - name: Run hydra-check
       if: (inputs.service == '' || inputs.service == 'hydra') && steps.check-skip.outputs.hydra_skip != 'true'

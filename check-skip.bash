@@ -4,9 +4,9 @@ set -euo pipefail
 
 PNAME=""
 SERVICE=""
-CONFIG="nixpkgs-health-check.toml"
+CONFIG=""
 # Resolve the directory where the script is located
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -29,23 +29,12 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [[ -z "$PNAME" ]]; then
-  PNAME="${PNAME:-}"
-fi
-
-if [[ -z "$PNAME" || -z "$SERVICE" ]]; then
-  echo "Usage: $0 --pname <name> --service <hydra|nixpkgs-update> [--config <path>]"
+if [[ -z "$PNAME" || -z "$SERVICE" || -z "$CONFIG" ]]; then
+  echo "Usage: $0 --pname <name> --service <hydra|nixpkgs-update> --config <absolute-path>"
   exit 1
-fi
-
-# Resolve config path to absolute path
-if [[ "$CONFIG" = /* ]]; then
-  config_file="$CONFIG"
-else
-  config_file="$PWD/$CONFIG"
 fi
 
 # nix eval expects PNAME env var for builtins.getEnv
 export PNAME="$PNAME"
 
-nix eval --impure --json --expr "(import \"$SCRIPT_DIR/check-skip.nix\" { pname = builtins.getEnv \"PNAME\"; service = \"$SERVICE\"; configPath = \"$config_file\"; })"
+nix eval --impure --json --expr "(import \"$SCRIPT_DIR/check-skip.nix\" { pname = builtins.getEnv \"PNAME\"; service = \"$SERVICE\"; configPath = \"$CONFIG\"; })"
