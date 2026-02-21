@@ -1,17 +1,6 @@
 name: health-check
 
 on:
-  workflow_dispatch:
-    inputs:
-      pnames:
-        description: 'JSON array of package names'
-        required: true
-        type: string
-      config:
-        description: 'Path to the configuration file for skipping checks'
-        required: true
-        type: string
-        default: 'nixpkgs-health-check-by-maintainer.toml'
   workflow_call:
     inputs:
       pnames:
@@ -80,16 +69,8 @@ jobs:
         with:
           persist-credentials: false
 
-      # Now run both services sequentially within the same job
-      # Each composite action handles its own skip logic internally
-      - name: Run hydra check
-        uses: ./.github/actions/hydra
-        with:
-          pname: ${{ matrix.pname }}
-          config: ${{ inputs.config }}
-
-      - name: Run update check
-        uses: ./.github/actions/nixpkgs-update
+      - name: Run health checks
+        uses: ./.github/actions/health-check
         with:
           pname: ${{ matrix.pname }}
           config: ${{ inputs.config }}

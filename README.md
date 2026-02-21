@@ -6,27 +6,40 @@ This GitHub Action helps ensure that specific Nixpkgs packages are buildable and
 
 ## Usage
 
-### Check packages by list
+### Check single package
 
-You can use the reusable workflow to check a list of packages.
-It automatically parallelizes checks for each package and service.
+You can use the composite action to check a single package.
 
 ```yaml
 jobs:
   check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: cachix/install-nix-action@v31
+      - uses: kachick/nixpkgs-health-check-action/.github/actions/health-check@main
+        with:
+          pname: 'hello'
+```
+
+### Check packages by list or maintainer
+
+You can use the reusable workflows to check multiple packages.
+They automatically parallelize checks for each package.
+
+```yaml
+jobs:
+  check:
+    # Use health-check.yml for a specific list of packages
     uses: kachick/nixpkgs-health-check-action/.github/workflows/health-check.yml@main
     with:
       pnames: '["hello", "biz-ud-gothic"]'
 ```
 
-### Check all packages of a maintainer
-
-You can use the dedicated maintainer workflow.
-It internally fetches the package list and calls the base runner.
-
 ```yaml
 jobs:
   check:
+    # Use health-check-by-maintainer.yml for all packages of a person
     uses: kachick/nixpkgs-health-check-action/.github/workflows/health-check-by-maintainer.yml@main
     with:
       maintainer: 'kachick'
