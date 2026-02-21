@@ -5,6 +5,14 @@ on:
       pname:
         required: true
         type: string
+      hydra:
+        required: false
+        type: boolean
+        default: true
+      nixpkgs-update:
+        required: false
+        type: boolean
+        default: true
       config:
         required: false
         type: string
@@ -26,7 +34,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     outputs:
-      skipped: ${{ steps.action.outputs.should_skip }}
+      skipped: ${{ steps.action.outputs.hydra_skipped }}
     steps:
       - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
         with:
@@ -41,14 +49,15 @@ jobs:
         id: action
         with:
           pname: ${{ inputs.pname }}
-          service: 'hydra'
+          hydra: ${{ inputs.hydra }}
+          nixpkgs-update: false
           config: ${{ inputs.config }}
 
   nixpkgs-update:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     outputs:
-      skipped: ${{ steps.action.outputs.should_skip }}
+      skipped: ${{ steps.action.outputs.nixpkgs_update_skipped }}
     steps:
       - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
         with:
@@ -63,5 +72,6 @@ jobs:
         id: action
         with:
           pname: ${{ inputs.pname }}
-          service: 'nixpkgs-update'
+          hydra: false
+          nixpkgs-update: ${{ inputs.nixpkgs-update }}
           config: ${{ inputs.config }}
