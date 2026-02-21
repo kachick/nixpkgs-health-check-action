@@ -1,4 +1,8 @@
-{ pname, service, configPath }:
+{
+  pname,
+  service,
+  configPath,
+}:
 let
   config = builtins.fromTOML (builtins.readFile (/. + configPath));
   skipConfig = if builtins.hasAttr "skip" config then config.skip else { };

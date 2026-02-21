@@ -11,13 +11,13 @@ inputs:
     required: false
 outputs:
   hydra_skipped:
-    description: "Whether hydra check was skipped"
+    description: 'Whether hydra check was skipped'
     value: ${{ steps.check-skip.outputs.hydra_skip }}
   nixpkgs_update_skipped:
-    description: "Whether nixpkgs-update check was skipped"
+    description: 'Whether nixpkgs-update check was skipped'
     value: ${{ steps.check-skip.outputs.update_skip }}
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
     - name: Check skip status
       id: check-skip
@@ -38,7 +38,7 @@ runs:
 
         echo "hydra_skip=$hydra_skip" >> $GITHUB_OUTPUT
         echo "update_skip=$update_skip" >> $GITHUB_OUTPUT
-        
+
         if [[ "$hydra_skip" == "true" ]]; then
            echo "Skipping Hydra check for $PNAME: $hydra_reason"
         fi
@@ -52,8 +52,7 @@ runs:
       env:
         PNAME: ${{ inputs.pname }}
       run: |
-        nix run 'github:NixOS/nixpkgs/nixpkgs-unstable#hydra-check' -- --json --channel=nixpkgs-unstable --eval 
-          "$PNAME" | tee raw_hydra.json
+        nix run 'github:NixOS/nixpkgs/nixpkgs-unstable#hydra-check' -- --json --channel=nixpkgs-unstable --eval "$PNAME" | tee raw_hydra.json
 
     - name: Normalize Hydra result
       if: steps.check-skip.outputs.hydra_skip != 'true'
