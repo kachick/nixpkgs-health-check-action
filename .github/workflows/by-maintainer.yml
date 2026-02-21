@@ -71,4 +71,4 @@ jobs:
     uses: ./.github/workflows/health-check.yml
     with:
       pname: '${{ matrix.pname }}'
-      config: ${{ inputs.config }}
+      config: ${{ inputs.config || 'nixpkgs-health-check.toml' }}
