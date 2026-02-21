@@ -5,23 +5,23 @@ let
     # Case 1: Package with skip configuration (Should SKIP)
     {
       pname = "hello";
-      check = "hydra";
+      service = "hydra";
       expectedSkip = true;
     }
     {
       pname = "hello";
-      check = "nixpkgs-update";
+      service = "nixpkgs-update";
       expectedSkip = true;
     }
     # Case 2: Package without skip configuration (Should RUN)
     {
       pname = "biz-ud-gothic";
-      check = "hydra";
+      service = "hydra";
       expectedSkip = false;
     }
     {
       pname = "biz-ud-gothic";
-      check = "nixpkgs-update";
+      service = "nixpkgs-update";
       expectedSkip = false;
     }
   ];
@@ -31,11 +31,11 @@ let
     let
       result = checkSkip {
         pname = tc.pname;
-        check = tc.check;
+        service = tc.service;
       };
       status = if result.skip == tc.expectedSkip then "PASS" else "FAIL";
     in
-    "${status}: ${tc.pname} [${tc.check}] -> skip=${toString result.skip} (reason: '${result.reason}')";
+    "${status}: ${tc.pname} [${tc.service}] -> skip=${toString result.skip} (reason: '${result.reason}')";
 
   results = map runTest testCases;
 in
