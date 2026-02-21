@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   test-skip-hello:
-    uses: ./.github/workflows/health-check-package.yml
+    uses: ./.github/workflows/health-check.yml
     with:
       pname: 'hello'
 
@@ -39,7 +39,7 @@ jobs:
           fi
 
   test-run-real:
-    uses: ./.github/workflows/health-check-package.yml
+    uses: ./.github/workflows/health-check.yml
     with:
       pname: 'biz-ud-gothic'
 

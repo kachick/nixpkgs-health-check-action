@@ -1,4 +1,4 @@
-name: health-check-maintainer
+name: health-check-by-maintainer
 
 on:
   workflow_dispatch:
@@ -61,7 +61,7 @@ jobs:
       fail-fast: false
       matrix:
         pname: '${{ fromJson(needs.get-pnames.outputs.json) }}'
-    uses: ./.github/workflows/health-check-package.yml
+    uses: ./.github/workflows/health-check.yml
     with:
       pname: '${{ matrix.pname }}'
       config: ${{ inputs.config }}

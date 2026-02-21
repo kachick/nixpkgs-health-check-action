@@ -14,7 +14,7 @@ It will automatically separate `hydra` and `nixpkgs-update` into different jobs 
 ```yaml
 jobs:
   check:
-    uses: kachick/nixpkgs-health-check-action/.github/workflows/health-check-package.yml@main
+    uses: kachick/nixpkgs-health-check-action/.github/workflows/health-check.yml@main
     with:
       pname: 'hello'
 ```
@@ -27,7 +27,7 @@ It internally calls the single package check workflow for each package.
 ```yaml
 jobs:
   check:
-    uses: kachick/nixpkgs-health-check-action/.github/workflows/health-check-maintainer.yml@main
+    uses: kachick/nixpkgs-health-check-action/.github/workflows/health-check-by-maintainer.yml@main
     with:
       maintainer: 'kachick'
 ```
