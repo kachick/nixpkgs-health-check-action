@@ -89,6 +89,7 @@ jobs:
 
   check:
     needs: [plan]
+    name: ${{ matrix.item.pname }}
     strategy:
       fail-fast: false
       matrix:
