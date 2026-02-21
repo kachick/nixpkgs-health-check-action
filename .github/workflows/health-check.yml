@@ -5,14 +5,6 @@ on:
       pname:
         required: true
         type: string
-      hydra:
-        required: false
-        type: boolean
-        default: true
-      nixpkgs-update:
-        required: false
-        type: boolean
-        default: true
       config:
         required: false
         type: string
@@ -49,7 +41,7 @@ jobs:
         id: action
         with:
           pname: ${{ inputs.pname }}
-          hydra: ${{ inputs.hydra }}
+          hydra: true
           nixpkgs-update: false
           config: ${{ inputs.config }}
 
@@ -73,5 +65,5 @@ jobs:
         with:
           pname: ${{ inputs.pname }}
           hydra: false
-          nixpkgs-update: ${{ inputs.nixpkgs-update }}
+          nixpkgs-update: true
           config: ${{ inputs.config }}
