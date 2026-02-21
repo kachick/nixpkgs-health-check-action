@@ -30,7 +30,7 @@ You can skip specific checks for packages with known upstream issues by creating
 ```toml
 [skip]
 # package-name = { service-name = "Reason for skipping" }
-pinact = { nixpkgs-update = "Failing due to upstream issue..." }
+typescript-go = { nixpkgs-update = "Failing in nixpkgs-update, see issue #..." }
 ```
 
 ### Manual Trigger
