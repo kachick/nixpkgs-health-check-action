@@ -39,6 +39,9 @@
                 dprint
                 typos
                 zizmor
+
+                shfmt
+                shellcheck
               ]
             );
           };
