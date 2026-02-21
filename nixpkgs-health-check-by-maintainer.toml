@@ -6,4 +6,4 @@ shogihome = { nixpkgs-update = "Seems temporary failure: https://nixpkgs-update-
 typescript-go = { nixpkgs-update = "https://github.com/NixOS/nixpkgs/pull/490934" }
 
 # For testing
-hello = { hydra = "Test skip", nixpkgs-update = "Test skip" }
+hello = { hydra = "Test skip" }
