@@ -1,0 +1,9 @@
+# Configuration for nixpkgs-health-check-action
+
+[skip]
+pinact = { nixpkgs-update = "https://github.com/NixOS/nixpkgs/pull/472064" }
+shogihome = { nixpkgs-update = "Seems temporary failure: https://nixpkgs-update-logs.nix-community.org/shogihome/2026-02-15.log" }
+typescript-go = { nixpkgs-update = "https://github.com/NixOS/nixpkgs/pull/490934" }
+
+# For testing
+hello = { hydra = "Test skip", nixpkgs-update = "Test skip" }

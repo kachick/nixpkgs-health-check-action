@@ -12,7 +12,8 @@ on:
         required: true
         type: string
         default: 'kachick' # This should be a "key" of https://github.com/NixOS/nixpkgs/blob/master/maintainers/maintainer-list.nix
-# pull_request: # For development
+  pull_request:
+    types: [labeled]
 permissions:
   contents: read
 
@@ -22,6 +23,7 @@ defaults:
 
 jobs:
   get-pnames:
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'run-maintainer-check')
     # if: false # For development
     runs-on: ubuntu-24.04
     env:

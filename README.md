@@ -20,3 +20,19 @@ However [my workflow](.github/workflows/by-maintainer.yml) might be an your exam
 
 - Does not check the entire Nixpkgs repository. It only checks for specified packages.
 - Does not check the latest version of upstream. It only checks [nixpkgs-update](https://github.com/nix-community/nixpkgs-update)'s [results](https://nixpkgs-update-logs.nix-community.org/).
+
+## Advanced Configuration
+
+### Skipping Checks
+
+You can skip specific checks for packages with known upstream issues by creating a `nixpkgs-health-check.toml` file in the root of your repository.
+
+```toml
+[skip]
+# package-name = { service-name = "Reason for skipping" }
+typescript-go = { nixpkgs-update = "Failing in nixpkgs-update, see issue #..." }
+```
+
+### Manual Trigger
+
+In addition to scheduled runs, you can trigger a full check of your maintained packages by adding the `run-maintainer-check` label to a Pull Request.
