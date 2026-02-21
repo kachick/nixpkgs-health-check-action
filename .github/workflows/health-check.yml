@@ -5,17 +5,14 @@ on:
       pname:
         required: true
         type: string
-      config:
+      hydra:
         required: false
-        type: string
-        default: 'nixpkgs-health-check.toml'
-    outputs:
-      hydra_skipped:
-        description: 'Whether hydra check was skipped'
-        value: ${{ jobs.hydra.outputs.skipped }}
-      nixpkgs_update_skipped:
-        description: 'Whether nixpkgs-update check was skipped'
-        value: ${{ jobs.nixpkgs-update.outputs.skipped }}
+        type: boolean
+        default: true
+      nixpkgs-update:
+        required: false
+        type: boolean
+        default: true
 
 defaults:
   run:
@@ -23,10 +20,9 @@ defaults:
 
 jobs:
   hydra:
+    if: inputs.hydra
     runs-on: ubuntu-24.04
     timeout-minutes: 30
-    outputs:
-      skipped: ${{ steps.action.outputs.skipped }}
     steps:
       - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
         with:
@@ -38,16 +34,13 @@ jobs:
           persist-credentials: false
       - name: Run hydra check action
         uses: ./.github/actions/hydra
-        id: action
         with:
           pname: ${{ inputs.pname }}
-          config: ${{ inputs.config }}
 
   nixpkgs-update:
+    if: inputs.nixpkgs-update
     runs-on: ubuntu-24.04
     timeout-minutes: 30
-    outputs:
-      skipped: ${{ steps.action.outputs.skipped }}
     steps:
       - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
         with:
@@ -59,7 +52,5 @@ jobs:
           persist-credentials: false
       - name: Run nixpkgs-update check action
         uses: ./.github/actions/nixpkgs-update
-        id: action
         with:
           pname: ${{ inputs.pname }}
-          config: ${{ inputs.config }}
