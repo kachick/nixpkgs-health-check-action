@@ -5,17 +5,18 @@ on:
       pname:
         required: true
         type: string
+      hydra:
+        required: false
+        type: boolean
+        default: true
+      nixpkgs-update:
+        required: false
+        type: boolean
+        default: true
       config:
         required: false
         type: string
         default: 'nixpkgs-health-check.toml'
-    outputs:
-      hydra_skipped:
-        description: 'Whether hydra check was skipped'
-        value: ${{ jobs.hydra.outputs.skipped }}
-      nixpkgs_update_skipped:
-        description: 'Whether nixpkgs-update check was skipped'
-        value: ${{ jobs.nixpkgs-update.outputs.skipped }}
 
 defaults:
   run:
@@ -25,8 +26,6 @@ jobs:
   hydra:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
-    outputs:
-      skipped: ${{ steps.action.outputs.skipped }}
     steps:
       - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
         with:
@@ -41,14 +40,13 @@ jobs:
         id: action
         with:
           pname: ${{ inputs.pname }}
-          service: 'hydra'
+          hydra: ${{ inputs.hydra }}
+          nixpkgs-update: false # Specifically only run hydra in this job
           config: ${{ inputs.config }}
 
   nixpkgs-update:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
-    outputs:
-      skipped: ${{ steps.action.outputs.skipped }}
     steps:
       - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
         with:
@@ -63,5 +61,6 @@ jobs:
         id: action
         with:
           pname: ${{ inputs.pname }}
-          service: 'nixpkgs-update'
+          hydra: false # Specifically only run update in this job
+          nixpkgs-update: ${{ inputs.nixpkgs-update }}
           config: ${{ inputs.config }}

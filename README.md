@@ -9,6 +9,7 @@ This GitHub Action helps ensure that specific Nixpkgs packages are buildable and
 ### Check single package
 
 You can use this action to check a single package.
+If you want to skip specific checks, you can use the `hydra` and `nixpkgs-update` inputs.
 
 ```yaml
 jobs:
@@ -20,11 +21,13 @@ jobs:
       - uses: kachick/nixpkgs-health-check-action@main
         with:
           pname: 'hello'
+          hydra: false # Optional: skip hydra check without a config file
 ```
 
 ### Check all packages of a maintainer
 
 You can use the reusable workflow to check all packages maintained by a specific person.
+It uses a `nixpkgs-health-check.toml` file for skip-list by default.
 
 ```yaml
 jobs:
