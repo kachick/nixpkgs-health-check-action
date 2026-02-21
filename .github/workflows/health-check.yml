@@ -10,23 +10,25 @@ on:
         type: string
         default: 'nixpkgs-health-check.toml'
     outputs:
+      # Outputs are less necessary with matrix jobs as UI shows individual results,
+      # but we can still expose them if needed. For now, let's keep it clean.
       hydra_skipped:
-        description: 'Whether hydra check was skipped'
-        value: ${{ jobs.hydra.outputs.skipped }}
-      nixpkgs_update_skipped:
-        description: 'Whether nixpkgs-update check was skipped'
-        value: ${{ jobs.nixpkgs-update.outputs.skipped }}
+        description: 'Whether hydra check was skipped (only from hydra job)'
+        value: ${{ jobs.check.outputs.skipped }}
 
 defaults:
   run:
     shell: bash
 
 jobs:
-  hydra:
+  check:
+    name: ${{ matrix.service }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
-    outputs:
-      skipped: ${{ steps.check-skip.outputs.skipped }}
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [hydra, nixpkgs-update]
     steps:
       - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
         with:
@@ -37,65 +39,8 @@ jobs:
       - uses: actions/checkout@v6
         with:
           persist-credentials: false
-      - name: Check skip status
-        id: check-skip
-        env:
-          PNAME: ${{ inputs.pname }}
-          CONFIG: ${{ inputs.config }}
-        run: |
-          if [[ -f "$CONFIG" ]]; then
-            json=$(./check-skip.bash --pname "$PNAME" --service "hydra" --config "$CONFIG")
-            skipped=$(echo "$json" | jq -r .skip)
-            reason=$(echo "$json" | jq -r .reason)
-            echo "skipped=$skipped" >> "$GITHUB_OUTPUT"
-            if [[ "$skipped" == "true" ]]; then
-               echo "Skipping $PNAME for hydra. Reason: $reason"
-            fi
-          else
-            echo "skipped=false" >> "$GITHUB_OUTPUT"
-          fi
-      - uses: ./
-        id: action
+      - uses: ./ # Uses local action for internal/nested call
         with:
           pname: ${{ inputs.pname }}
-          hydra: ${{ steps.check-skip.outputs.skipped != 'true' }}
-          nixpkgs-update: false
-
-  nixpkgs-update:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 30
-    outputs:
-      skipped: ${{ steps.check-skip.outputs.skipped }}
-    steps:
-      - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
-        with:
-          # Enable accept-flake-config for using the garnix
-          extra_nix_config: |
-            sandbox = true
-            accept-flake-config = true
-      - uses: actions/checkout@v6
-        with:
-          persist-credentials: false
-      - name: Check skip status
-        id: check-skip
-        env:
-          PNAME: ${{ inputs.pname }}
-          CONFIG: ${{ inputs.config }}
-        run: |
-          if [[ -f "$CONFIG" ]]; then
-            json=$(./check-skip.bash --pname "$PNAME" --service "nixpkgs-update" --config "$CONFIG")
-            skipped=$(echo "$json" | jq -r .skip)
-            reason=$(echo "$json" | jq -r .reason)
-            echo "skipped=$skipped" >> "$GITHUB_OUTPUT"
-            if [[ "$skipped" == "true" ]]; then
-               echo "Skipping $PNAME for nixpkgs-update. Reason: $reason"
-            fi
-          else
-            echo "skipped=false" >> "$GITHUB_OUTPUT"
-          fi
-      - uses: ./
-        id: action
-        with:
-          pname: ${{ inputs.pname }}
-          hydra: false
-          nixpkgs-update: ${{ steps.check-skip.outputs.skipped != 'true' }}
+          service: ${{ matrix.service }}
+          config: ${{ inputs.config }}
