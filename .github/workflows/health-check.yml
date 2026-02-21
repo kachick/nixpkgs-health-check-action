@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     outputs:
-      skipped: ${{ steps.action.outputs.hydra_skipped }}
+      skipped: ${{ steps.action.outputs.skipped }}
     steps:
       - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
         with:
@@ -48,7 +48,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     outputs:
-      skipped: ${{ steps.action.outputs.nixpkgs_update_skipped }}
+      skipped: ${{ steps.action.outputs.skipped }}
     steps:
       - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
         with:
