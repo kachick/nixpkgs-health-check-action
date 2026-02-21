@@ -1,0 +1,30 @@
+name: 📖
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/health-check.yml'
+      - '.github/workflows/examples.yml'
+      - 'action.yml'
+      - 'check-skip.*'
+      - 'nixpkgs-health-check-by-maintainer.toml'
+
+permissions:
+  contents: read
+
+jobs:
+  # Example 1: Basic list usage
+  list-example:
+    name: 📖 list example
+    uses: ./.github/workflows/health-check.yml
+    with:
+      pnames: '["hello", "biz-ud-gothic"]'
+      config: 'nixpkgs-health-check-by-maintainer.toml'
+
+  # Example 2: Maintainer adapter usage
+  maintainer-example:
+    name: 📖 maintainer example
+    uses: ./.github/workflows/health-check-by-maintainer.yml
+    with:
+      maintainer: 'kachick'
+      config: 'nixpkgs-health-check-by-maintainer.toml'
