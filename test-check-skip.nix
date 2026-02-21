@@ -2,19 +2,26 @@ let
   checkSkip = import ./check-skip.nix;
 
   testCases = [
+    # Case 1: Package with skip configuration (Should SKIP)
     {
-      pname = "pinact";
-      check = "nixpkgs-update";
+      pname = "hello";
+      check = "hydra";
       expectedSkip = true;
     }
     {
-      pname = "pinact";
+      pname = "hello";
+      check = "nixpkgs-update";
+      expectedSkip = true;
+    }
+    # Case 2: Package without skip configuration (Should RUN)
+    {
+      pname = "biz-ud-gothic";
       check = "hydra";
       expectedSkip = false;
     }
     {
-      pname = "unknown";
-      check = "hydra";
+      pname = "biz-ud-gothic";
+      check = "nixpkgs-update";
       expectedSkip = false;
     }
   ];
