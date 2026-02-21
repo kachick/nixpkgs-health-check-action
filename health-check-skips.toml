@@ -1,0 +1,18 @@
+# Configuration for skipping health checks
+# Format:
+# [pname]
+# skip_nixpkgs_update = true/false
+# skip_hydra = true/false
+# reason = "Explanation for skipping"
+
+[pinact]
+skip_nixpkgs_update = true
+reason = "Failing in nixpkgs-update, see issue #..."
+
+[shogihome]
+skip_nixpkgs_update = true
+reason = "Failing in nixpkgs-update, see issue #..."
+
+[typescript-go]
+skip_nixpkgs_update = true
+reason = "Failing in nixpkgs-update, see issue #..."
