@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   check:
-    uses: ./.github/workflows/by-maintainer.yml
+    uses: ./.github/workflows/health-check-maintainer.yml
     with:
       maintainer: 'kachick'
       config: 'nixpkgs-health-check.toml'
