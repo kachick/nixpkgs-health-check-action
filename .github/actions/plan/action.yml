@@ -28,7 +28,6 @@ runs:
         PNAMES: ${{ inputs.pnames }}
         CONFIG: ${{ inputs.config }}
       run: |
-        # Get raw list of pnames
         if [[ -n "$MAINTAINER" ]]; then
           raw_list=$(nix run github:kachick/nixpkgs-maintained-by -- -id "$MAINTAINER" -json)
         else
@@ -47,12 +46,12 @@ runs:
             update_skip="false"
           fi
 
-          # Use objects with 'id' for UI and 'pname' for logic
+          # Use "pname / service" format to FORCE GitHub UI to show it in sidebar
           if [[ "$hydra_skip" != "true" ]]; then
-            hydra_list=$(echo "$hydra_list" | jq -c --arg p "$pname" '. += [{id: ("hydra / " + $p), pname: $p}]')
+            hydra_list=$(echo "$hydra_list" | jq -c --arg p "$pname" '. += [$p + " / hydra"]')
           fi
           if [[ "$update_skip" != "true" ]]; then
-            update_list=$(echo "$update_list" | jq -c --arg p "$pname" '. += [{id: ("update / " + $p), pname: $p}]')
+            update_list=$(echo "$update_list" | jq -c --arg p "$pname" '. += [$p + " / update"]')
           fi
         done
 
