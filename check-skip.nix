@@ -5,11 +5,7 @@
 }:
 let
   actualConfigPath = /. + configPath;
-  config =
-    if builtins.pathExists actualConfigPath then
-      builtins.fromTOML (builtins.readFile actualConfigPath)
-    else
-      { };
+  config = builtins.fromTOML (builtins.readFile actualConfigPath);
   skipConfig = if builtins.hasAttr "skip" config then config.skip else { };
   packageConfig = if builtins.hasAttr pname skipConfig then skipConfig.${pname} else { };
   hasService = builtins.hasAttr service packageConfig;
