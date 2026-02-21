@@ -5,6 +5,9 @@ inputs:
   pname:
     description: 'Package name in Nixpkgs'
     required: true
+  service:
+    description: 'Service to check (hydra or nixpkgs-update). If omitted, both will be checked.'
+    required: false
   config:
     description: 'Path to the configuration file for skipping checks'
     default: 'nixpkgs-health-check.toml'
@@ -47,7 +50,7 @@ runs:
         fi
 
     - name: Run hydra-check
-      if: steps.check-skip.outputs.hydra_skip != 'true'
+      if: (inputs.service == '' || inputs.service == 'hydra') && steps.check-skip.outputs.hydra_skip != 'true'
       shell: bash
       env:
         PNAME: ${{ inputs.pname }}
@@ -55,13 +58,13 @@ runs:
         nix run 'github:NixOS/nixpkgs/nixpkgs-unstable#hydra-check' -- --json --channel=nixpkgs-unstable --eval "$PNAME" | tee raw_hydra.json
 
     - name: Normalize Hydra result
-      if: steps.check-skip.outputs.hydra_skip != 'true'
+      if: (inputs.service == '' || inputs.service == 'hydra') && steps.check-skip.outputs.hydra_skip != 'true'
       shell: bash
       run: |
         jq --from-file "${{ github.action_path }}/normalize-hydra-eval.jq" raw_hydra.json | tee normalized_hydra.json
 
     - name: Report Hydra errors
-      if: steps.check-skip.outputs.hydra_skip != 'true'
+      if: (inputs.service == '' || inputs.service == 'hydra') && steps.check-skip.outputs.hydra_skip != 'true'
       shell: bash
       env:
         PNAME: ${{ inputs.pname }}
@@ -73,7 +76,7 @@ runs:
         fi
 
     - name: Run nixpkgs-update-log-checker
-      if: steps.check-skip.outputs.update_skip != 'true'
+      if: (inputs.service == '' || inputs.service == 'nixpkgs-update') && steps.check-skip.outputs.update_skip != 'true'
       shell: bash
       env:
         PNAME: ${{ inputs.pname }}

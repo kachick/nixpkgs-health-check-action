@@ -12,22 +12,21 @@ on:
     outputs:
       hydra_skipped:
         description: 'Whether hydra check was skipped'
-        value: ${{ jobs.check.outputs.hydra_skipped }}
+        value: ${{ jobs.hydra.outputs.skipped }}
       nixpkgs_update_skipped:
         description: 'Whether nixpkgs-update check was skipped'
-        value: ${{ jobs.check.outputs.nixpkgs_update_skipped }}
+        value: ${{ jobs.nixpkgs-update.outputs.skipped }}
 
 defaults:
   run:
     shell: bash
 
 jobs:
-  check:
+  hydra:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     outputs:
-      hydra_skipped: ${{ steps.action.outputs.hydra_skipped }}
-      nixpkgs_update_skipped: ${{ steps.action.outputs.nixpkgs_update_skipped }}
+      skipped: ${{ steps.action.outputs.hydra_skipped }}
     steps:
       - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
         with:
@@ -42,4 +41,27 @@ jobs:
         id: action
         with:
           pname: ${{ inputs.pname }}
+          service: 'hydra'
+          config: ${{ inputs.config }}
+
+  nixpkgs-update:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    outputs:
+      skipped: ${{ steps.action.outputs.nixpkgs_update_skipped }}
+    steps:
+      - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
+        with:
+          # Enable accept-flake-config for using the garnix
+          extra_nix_config: |
+            sandbox = true
+            accept-flake-config = true
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: ./
+        id: action
+        with:
+          pname: ${{ inputs.pname }}
+          service: 'nixpkgs-update'
           config: ${{ inputs.config }}
