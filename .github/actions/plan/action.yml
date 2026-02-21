@@ -27,8 +27,6 @@ runs:
         MAINTAINER: ${{ inputs.maintainer }}
         PNAMES: ${{ inputs.pnames }}
         CONFIG: ${{ inputs.config }}
-        # Ensure nixpkgs is available for nix-maintained-by
-        NIX_PATH: nixpkgs=https://channels.nixos.org/nixpkgs-unstable/nixexprs.tar.xz
       run: |
         # Get raw list of pnames
         if [[ -n "$MAINTAINER" ]]; then
