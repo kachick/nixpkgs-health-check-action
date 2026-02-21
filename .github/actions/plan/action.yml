@@ -34,10 +34,10 @@ runs:
 
           if [[ "$hydra_skip" != "true" || "$update_skip" != "true" ]]; then
             tmp=$(mktemp)
-            jq -c --arg p "$pname" 
-               --arg run_hydra "$([[ "$hydra_skip" != "true" ]] && echo true || echo false)" 
-               --arg run_update "$([[ "$update_skip" != "true" ]] && echo true || echo false)" 
-               '. += [{pname: $p, run_hydra: ($run_hydra == "true"), run_update: ($run_update == "true")}]' 
+            jq -c --arg p "$pname" \
+               --arg run_hydra "$([[ "$hydra_skip" != "true" ]] && echo true || echo false)" \
+               --arg run_update "$([[ "$update_skip" != "true" ]] && echo true || echo false)" \
+               '. += [{pname: $p, run_hydra: ($run_hydra == "true"), run_update: ($run_update == "true")}]' \
                matrix.json > "$tmp" && mv "$tmp" matrix.json
           fi
         done
