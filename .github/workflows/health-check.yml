@@ -12,29 +12,21 @@ on:
     outputs:
       hydra_skipped:
         description: 'Whether hydra check was skipped'
-        value: ${{ jobs.check.outputs.hydra_skipped }}
+        value: ${{ jobs.hydra.outputs.skipped }}
       nixpkgs_update_skipped:
         description: 'Whether nixpkgs-update check was skipped'
-        value: ${{ jobs.check.outputs.nixpkgs_update_skipped }}
+        value: ${{ jobs.nixpkgs-update.outputs.skipped }}
 
 defaults:
   run:
     shell: bash
 
 jobs:
-  check:
-    name: ${{ matrix.service }}
+  hydra:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        service: [hydra, nixpkgs-update]
     outputs:
-      # These will be concatenated by GHA when matrix is used
-      # but we need to pick specific one for the workflow output
-      hydra_skipped: ${{ steps.save-hydra-output.outputs.skipped }}
-      nixpkgs_update_skipped: ${{ steps.save-update-output.outputs.skipped }}
+      skipped: ${{ steps.action.outputs.should_skip }}
     steps:
       - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
         with:
@@ -49,19 +41,27 @@ jobs:
         id: action
         with:
           pname: ${{ inputs.pname }}
-          service: ${{ matrix.service }}
+          service: 'hydra'
           config: ${{ inputs.config }}
-      - name: Save hydra output
-        id: save-hydra-output
-        if: matrix.service == 'hydra'
-        env:
-          SKIPPED: ${{ steps.action.outputs.should_skip }}
-        run: |
-          echo "skipped=$SKIPPED" >> "$GITHUB_OUTPUT"
-      - name: Save update output
-        id: save-update-output
-        if: matrix.service == 'nixpkgs-update'
-        env:
-          SKIPPED: ${{ steps.action.outputs.should_skip }}
-        run: |
-          echo "skipped=$SKIPPED" >> "$GITHUB_OUTPUT"
+
+  nixpkgs-update:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    outputs:
+      skipped: ${{ steps.action.outputs.should_skip }}
+    steps:
+      - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
+        with:
+          # Enable accept-flake-config for using the garnix
+          extra_nix_config: |
+            sandbox = true
+            accept-flake-config = true
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: ./
+        id: action
+        with:
+          pname: ${{ inputs.pname }}
+          service: 'nixpkgs-update'
+          config: ${{ inputs.config }}
