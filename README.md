@@ -22,17 +22,17 @@ jobs:
           pname: 'hello'
 ```
 
-### Check all packages of a maintainer (with skip-list support)
+### Check packages by list or maintainer
 
-You can use the reusable workflow to check all packages maintained by a specific person.
+You can use the reusable workflow to check multiple packages.
 It automatically parallelizes checks for each package and service.
 
 ```yaml
 jobs:
   check:
-    uses: kachick/nixpkgs-health-check-action/.github/workflows/health-check-by-maintainer.yml@main
+    uses: kachick/nixpkgs-health-check-action/.github/workflows/health-check.yml@main
     with:
-      maintainer: 'kachick'
+      maintainer: 'kachick' # Or use pnames: '["pkg1", "pkg2"]'
 ```
 
 ## Dependencies
@@ -51,7 +51,6 @@ jobs:
 ### Skipping Checks
 
 You can skip specific checks for packages with known upstream issues by creating a `nixpkgs-health-check-by-maintainer.toml` file in the root of your repository.
-This is used by the `health-check-by-maintainer.yml` workflow.
 
 ```toml
 [skip]
