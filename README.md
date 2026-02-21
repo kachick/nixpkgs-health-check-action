@@ -19,10 +19,10 @@ jobs:
       pname: 'hello'
 ```
 
-### Check all packages of a maintainer
+### Check all packages of a maintainer (with skip-list support)
 
 You can use the reusable workflow to check all packages maintained by a specific person.
-It uses a `nixpkgs-health-check.toml` file for skip-list by default.
+It uses a `health-check-by-maintainer.toml` file for skip-list by default.
 
 ```yaml
 jobs:
@@ -47,7 +47,8 @@ jobs:
 
 ### Skipping Checks
 
-You can skip specific checks for packages with known upstream issues by creating a `nixpkgs-health-check.toml` file in the root of your repository.
+You can skip specific checks for packages with known upstream issues by creating a `health-check-by-maintainer.toml` file in the root of your repository.
+This is used by the `health-check-by-maintainer.yml` workflow.
 
 ```toml
 [skip]

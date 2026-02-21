@@ -4,7 +4,7 @@ set -euo pipefail
 
 PNAME=""
 SERVICE=""
-CONFIG="nixpkgs-health-check.toml"
+CONFIG="health-check-by-maintainer.toml"
 # Resolve the directory where the script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -40,7 +40,6 @@ if [[ "$CONFIG" != /* ]]; then
 fi
 
 # Guard: Ensure the config path is a regular file.
-# If it's a directory or missing, Nix builtins.readFile will fail with "Is a directory" or "No such file".
 if [[ ! -f "$CONFIG" ]]; then
   echo "Error: Config file '$CONFIG' not found or is not a regular file." >&2
   exit 1

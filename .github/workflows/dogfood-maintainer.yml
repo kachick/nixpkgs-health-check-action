@@ -18,4 +18,4 @@ jobs:
     uses: ./.github/workflows/health-check-by-maintainer.yml
     with:
       maintainer: 'kachick'
-      config: 'nixpkgs-health-check.toml'
+      config: 'health-check-by-maintainer.toml'

@@ -10,27 +10,27 @@ let
     {
       pname = "hello";
       service = "hydra";
-      configPath = "${pwd}/nixpkgs-health-check.toml";
+      configPath = "${pwd}/health-check-by-maintainer.toml";
       expectedSkip = true;
     }
     {
       pname = "hello";
       service = "nixpkgs-update";
-      configPath = "${pwd}/nixpkgs-health-check.toml";
+      configPath = "${pwd}/health-check-by-maintainer.toml";
       expectedSkip = true;
     }
     # Case 2: Package without skip configuration (Should RUN)
     {
       pname = "biz-ud-gothic";
       service = "hydra";
-      configPath = "${pwd}/nixpkgs-health-check.toml";
+      configPath = "${pwd}/health-check-by-maintainer.toml";
       expectedSkip = false;
     }
     # Case 3: Simulation of the fix (absolute path string)
     {
       pname = "hello";
       service = "hydra";
-      configPath = toString ./nixpkgs-health-check.toml;
+      configPath = toString ./health-check-by-maintainer.toml;
       expectedSkip = true;
     }
   ];
