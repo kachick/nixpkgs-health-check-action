@@ -35,8 +35,9 @@ runs:
         for pname in $(echo "$pnames" | jq -r '.[]'); do
           # A package should be included if ANY of its services are not skipped
           if [[ -f "$CONFIG" ]]; then
-            hydra_skip=$(./.health-check-action/check-skip.bash --pname "$pname" --service "hydra" --config "$CONFIG" | jq -r .skip)
-            update_skip=$(./.health-check-action/check-skip.bash --pname "$pname" --service "nixpkgs-update" --config "$CONFIG" | jq -r .skip)
+            # Use github.action_path to find the script safely
+            hydra_skip=$("${{ github.action_path }}/../../../check-skip.bash" --pname "$pname" --service "hydra" --config "$CONFIG" | jq -r .skip)
+            update_skip=$("${{ github.action_path }}/../../../check-skip.bash" --pname "$pname" --service "nixpkgs-update" --config "$CONFIG" | jq -r .skip)
           else
             hydra_skip="false"
             update_skip="false"
