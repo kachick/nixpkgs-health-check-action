@@ -1,0 +1,42 @@
+name: 'Nixpkgs Update Check'
+description: 'Checks the health of a Nixpkgs package using nixpkgs-update logs'
+inputs:
+  pname:
+    description: 'Package name in Nixpkgs'
+    required: true
+  config:
+    description: 'Path to the skip-list configuration file'
+    default: 'nixpkgs-health-check.toml'
+    required: false
+outputs:
+  skipped:
+    description: 'Whether the check was skipped'
+    value: ${{ steps.check-skip.outputs.skipped }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Check skip status
+      id: check-skip
+      shell: bash
+      env:
+        PNAME: ${{ inputs.pname }}
+        CONFIG: ${{ inputs.config }}
+      run: |
+        if [[ -f "$CONFIG" ]]; then
+          json=$("${{ github.action_path }}/../../../check-skip.bash" --pname "$PNAME" --service "nixpkgs-update" --config "$CONFIG")
+          skipped=$(echo "$json" | jq -r .skip)
+          echo "skipped=$skipped" >> "$GITHUB_OUTPUT"
+          if [[ "$skipped" == "true" ]]; then
+             echo "Skipping $PNAME for nixpkgs-update. Reason: $(echo "$json" | jq -r .reason)"
+          fi
+        else
+          echo "skipped=false" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Run nixpkgs-update-log-checker
+      if: steps.check-skip.outputs.skipped != 'true'
+      shell: bash
+      env:
+        PNAME: ${{ inputs.pname }}
+      run: |
+        nix run 'github:kachick/nixpkgs-update-log-checker' -- --packages "$PNAME"

@@ -4,48 +4,67 @@ on:
     paths:
       - '.github/workflows/health-check.yml'
       - '.github/workflows/ci-test-skip.yml'
+      - '.github/actions/**'
+      - 'check-skip.*'
 
 permissions:
   contents: read
 
 jobs:
-  test-skip-hydra:
-    name: Verify hydra skip flag
+  test-skip-hello:
     uses: ./.github/workflows/health-check.yml
     with:
       pname: 'hello'
-      hydra: false
-      nixpkgs-update: true
+      config: 'nixpkgs-health-check.toml'
 
-  assert-hydra-skipped:
-    needs: test-skip-hydra
+  assert-hello-skipped:
+    needs: test-skip-hello
     runs-on: ubuntu-latest
     steps:
-      - name: Check result
+      - name: Check outputs
         env:
-          HYDRA_RESULT: ${{ needs.test-skip-hydra.outputs.hydra_skipped }}
+          HYDRA_SKIPPED: ${{ needs.test-skip-hello.outputs.hydra_skipped }}
+          NIXPKGS_UPDATE_SKIPPED: ${{ needs.test-skip-hello.outputs.nixpkgs_update_skipped }}
         run: |
-          echo "Hydra job result (via outputs): $HYDRA_RESULT"
-          # health-check.yml should still provide outputs for verification in this test.
+          echo "Hydra skipped: $HYDRA_SKIPPED"
+          echo "Nixpkgs-update skipped: $NIXPKGS_UPDATE_SKIPPED"
 
-  test-run-all:
-    name: Verify real package execution
+          if [[ "$HYDRA_SKIPPED" != "true" ]]; then
+            echo "Error: Hydra check should have been skipped for 'hello'"
+            exit 1
+          fi
+
+          if [[ "$NIXPKGS_UPDATE_SKIPPED" != "true" ]]; then
+            echo "Error: Nixpkgs-update check should have been skipped for 'hello'"
+            exit 1
+          fi
+
+  test-run-real:
     uses: ./.github/workflows/health-check.yml
     with:
       pname: 'biz-ud-gothic'
-      hydra: true
-      nixpkgs-update: true
+      config: 'nixpkgs-health-check.toml'
 
   assert-real-ran:
-    needs: test-run-all
+    needs: test-run-real
     if: always()
     runs-on: ubuntu-latest
     steps:
-      - name: Check result
+      - name: Check outputs
         env:
-          JOB_RESULT: ${{ needs.test-run-all.result }}
+          HYDRA_SKIPPED: ${{ needs.test-run-real.outputs.hydra_skipped }}
+          NIXPKGS_UPDATE_SKIPPED: ${{ needs.test-run-real.outputs.nixpkgs_update_skipped }}
+          JOB_RESULT: ${{ needs.test-run-real.result }}
         run: |
+          echo "Hydra skipped: $HYDRA_SKIPPED"
+          echo "Nixpkgs-update skipped: $NIXPKGS_UPDATE_SKIPPED"
           echo "Job Result: $JOB_RESULT"
+
+          if [[ "$HYDRA_SKIPPED" == "true" ]]; then
+             echo "Error: Hydra check should NOT have been skipped for 'biz-ud-gothic'"
+             exit 1
+          fi
+
           if [[ "$JOB_RESULT" != "success" ]]; then
              echo "Error: Real test job failed or was skipped unexpectedly."
              exit 1

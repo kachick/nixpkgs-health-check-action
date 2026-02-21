@@ -17,10 +17,9 @@ jobs:
     uses: kachick/nixpkgs-health-check-action/.github/workflows/health-check.yml@main
     with:
       pname: 'hello'
-      hydra: true # Optional: enable/disable specifically
 ```
 
-### Check all packages of a maintainer (with skip-list support)
+### Check all packages of a maintainer
 
 You can use the reusable workflow to check all packages maintained by a specific person.
 It uses a `nixpkgs-health-check.toml` file for skip-list by default.
@@ -49,7 +48,6 @@ jobs:
 ### Skipping Checks
 
 You can skip specific checks for packages with known upstream issues by creating a `nixpkgs-health-check.toml` file in the root of your repository.
-This is used by the `health-check-by-maintainer.yml` workflow.
 
 ```toml
 [skip]

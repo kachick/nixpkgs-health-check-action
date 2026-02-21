@@ -1,18 +1,21 @@
-name: 'Nixpkgs health check runner'
+name: 'Nixpkgs health checks'
 on:
   workflow_call:
     inputs:
       pname:
         required: true
         type: string
-      hydra:
+      config:
         required: false
-        type: boolean
-        default: true
-      nixpkgs-update:
-        required: false
-        type: boolean
-        default: true
+        type: string
+        default: 'nixpkgs-health-check.toml'
+    outputs:
+      hydra_skipped:
+        description: 'Whether hydra check was skipped'
+        value: ${{ jobs.hydra.outputs.skipped }}
+      nixpkgs_update_skipped:
+        description: 'Whether nixpkgs-update check was skipped'
+        value: ${{ jobs.nixpkgs-update.outputs.skipped }}
 
 defaults:
   run:
@@ -20,49 +23,43 @@ defaults:
 
 jobs:
   hydra:
-    if: inputs.hydra
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    outputs:
+      skipped: ${{ steps.action.outputs.skipped }}
     steps:
       - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
         with:
-          # Enable accept-flake-config for using the garnix
           extra_nix_config: |
             sandbox = true
             accept-flake-config = true
-      - name: Checkout health-check scripts
-        uses: actions/checkout@v6
+      - uses: actions/checkout@v6
         with:
-          repository: kachick/nixpkgs-health-check-action
-          path: .health-check-action
-          # Use the SHA of the current workflow execution to support PR testing
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
-      - name: Run hydra-check
-        env:
-          PNAME: ${{ inputs.pname }}
-        run: |
-          nix run 'github:NixOS/nixpkgs/nixpkgs-unstable#hydra-check' -- --json --channel=nixpkgs-unstable --eval "$PNAME" | tee raw_hydra.json
-          jq --from-file .health-check-action/normalize-hydra-eval.jq raw_hydra.json | tee normalized_hydra.json
-          if jq -e '.[] | select(.severity == "error")' normalized_hydra.json > hydra_errors.jsonl; then
-            echo "::error::Hydra check failed for $PNAME"
-            cat hydra_errors.jsonl
-            exit 1
-          fi
+      - name: Run hydra check action
+        uses: ./.github/actions/hydra
+        id: action
+        with:
+          pname: ${{ inputs.pname }}
+          config: ${{ inputs.config }}
 
   nixpkgs-update:
-    if: inputs.nixpkgs-update
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    outputs:
+      skipped: ${{ steps.action.outputs.skipped }}
     steps:
       - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
         with:
-          # Enable accept-flake-config for using the garnix
           extra_nix_config: |
             sandbox = true
             accept-flake-config = true
-      - name: Run nixpkgs-update-log-checker
-        env:
-          PNAME: ${{ inputs.pname }}
-        run: |
-          nix run 'github:kachick/nixpkgs-update-log-checker' -- --packages "$PNAME"
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Run nixpkgs-update check action
+        uses: ./.github/actions/nixpkgs-update
+        id: action
+        with:
+          pname: ${{ inputs.pname }}
+          config: ${{ inputs.config }}
