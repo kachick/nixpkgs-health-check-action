@@ -10,11 +10,12 @@ on:
         type: string
         default: 'nixpkgs-health-check.toml'
     outputs:
-      # Outputs are less necessary with matrix jobs as UI shows individual results,
-      # but we can still expose them if needed. For now, let's keep it clean.
       hydra_skipped:
-        description: 'Whether hydra check was skipped (only from hydra job)'
-        value: ${{ jobs.check.outputs.skipped }}
+        description: 'Whether hydra check was skipped'
+        value: ${{ jobs.check.outputs.hydra_skipped }}
+      nixpkgs_update_skipped:
+        description: 'Whether nixpkgs-update check was skipped'
+        value: ${{ jobs.check.outputs.nixpkgs_update_skipped }}
 
 defaults:
   run:
@@ -29,6 +30,11 @@ jobs:
       fail-fast: false
       matrix:
         service: [hydra, nixpkgs-update]
+    outputs:
+      # These will be concatenated by GHA when matrix is used
+      # but we need to pick specific one for the workflow output
+      hydra_skipped: ${{ steps.save-hydra-output.outputs.skipped }}
+      nixpkgs_update_skipped: ${{ steps.save-update-output.outputs.skipped }}
     steps:
       - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
         with:
@@ -39,8 +45,23 @@ jobs:
       - uses: actions/checkout@v6
         with:
           persist-credentials: false
-      - uses: ./ # Uses local action for internal/nested call
+      - uses: ./
+        id: action
         with:
           pname: ${{ inputs.pname }}
           service: ${{ matrix.service }}
           config: ${{ inputs.config }}
+      - name: Save hydra output
+        id: save-hydra-output
+        if: matrix.service == 'hydra'
+        env:
+          SKIPPED: ${{ steps.action.outputs.should_skip }}
+        run: |
+          echo "skipped=$SKIPPED" >> "$GITHUB_OUTPUT"
+      - name: Save update output
+        id: save-update-output
+        if: matrix.service == 'nixpkgs-update'
+        env:
+          SKIPPED: ${{ steps.action.outputs.should_skip }}
+        run: |
+          echo "skipped=$SKIPPED" >> "$GITHUB_OUTPUT"
