@@ -2,7 +2,7 @@ name: 'Nixpkgs Update Check'
 description: 'Checks the health of a Nixpkgs package using nixpkgs-update logs'
 inputs:
   pname:
-    description: 'Package name in Nixpkgs (may include / service suffix)'
+    description: 'Package name in Nixpkgs'
     required: true
 runs:
   using: 'composite'
@@ -10,8 +10,6 @@ runs:
     - name: Run nixpkgs-update-log-checker
       shell: bash
       env:
-        INPUT_PNAME: ${{ inputs.pname }}
+        PNAME: ${{ inputs.pname }}
       run: |
-        PNAME="${INPUT_PNAME% / *}"
-        echo "Extracted package name: $PNAME"
         nix run 'github:kachick/nixpkgs-update-log-checker' -- --packages "$PNAME"

@@ -39,6 +39,7 @@ runs:
 
         for pname in $(echo "$raw_list" | jq -r '.[]'); do
           if [[ -f "$CONFIG" ]]; then
+            # Simple skip check
             hydra_skip=$("${{ github.action_path }}/../../../check-skip.bash" --pname "$pname" --service "hydra" --config "$CONFIG" | jq -r .skip)
             update_skip=$("${{ github.action_path }}/../../../check-skip.bash" --pname "$pname" --service "nixpkgs-update" --config "$CONFIG" | jq -r .skip)
           else
@@ -46,12 +47,12 @@ runs:
             update_skip="false"
           fi
 
-          # Use "pname / service" format to FORCE GitHub UI to show it in sidebar
+          # Output clean pname lists
           if [[ "$hydra_skip" != "true" ]]; then
-            hydra_list=$(echo "$hydra_list" | jq -c --arg p "$pname" '. += [$p + " / hydra"]')
+            hydra_list=$(echo "$hydra_list" | jq -c --arg p "$pname" '. += [$p]')
           fi
           if [[ "$update_skip" != "true" ]]; then
-            update_list=$(echo "$update_list" | jq -c --arg p "$pname" '. += [$p + " / update"]')
+            update_list=$(echo "$update_list" | jq -c --arg p "$pname" '. += [$p]')
           fi
         done
 
