@@ -19,6 +19,7 @@ inputs:
 runs:
   using: 'composite'
   steps:
+    # Service 1: Hydra
     - name: Hydra skip status
       if: inputs.hydra == 'true'
       id: hydra-skip
@@ -49,6 +50,7 @@ runs:
           exit 1
         fi
 
+    # Service 2: nixpkgs-update
     - name: nixpkgs-update skip status
       if: inputs.nixpkgs-update == 'true'
       id: update-skip

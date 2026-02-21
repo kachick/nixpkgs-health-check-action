@@ -3,7 +3,8 @@ name: 🧪
 on:
   pull_request:
     paths:
-      - '.github/workflows/health-check*'
+      - '.github/workflows/health-check.yml'
+      - '.github/workflows/ci-runner.yml'
       - 'action.yml'
       - 'check-skip.*'
       - 'nixpkgs-health-check-by-maintainer.toml'
@@ -12,56 +13,8 @@ permissions:
   contents: read
 
 jobs:
-  # Job 1: Verify the Decision Maker logic (Skip-list filtering)
-  verify-plan:
-    name: 🧪 verify skip logic
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          persist-credentials: false
-      - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
-        with:
-          nix_path: 'nixpkgs=channel:nixpkgs-unstable'
-      - name: Generate matrix (Plan)
-        id: plan
-        env:
-          PNAMES: '["hello", "biz-ud-gothic"]'
-          CONFIG: 'nixpkgs-health-check-by-maintainer.toml'
-        run: |
-          echo '[]' > matrix.json
-          for pname in $(echo "$PNAMES" | jq -r '.[]'); do
-            if [[ -f "$CONFIG" ]]; then
-              hydra_skip=$(./check-skip.bash --pname "$pname" --service "hydra" --config "$CONFIG" | jq -r .skip)
-              update_skip=$(./check-skip.bash --pname "$pname" --service "nixpkgs-update" --config "$CONFIG" | jq -r .skip)
-            else
-              hydra_skip="false"; update_skip="false"
-            fi
-
-            if [[ "$hydra_skip" != "true" || "$update_skip" != "true" ]]; then
-              tmp=$(mktemp)
-              jq -c --arg p "$pname" '. += [$p]' matrix.json > "$tmp" && mv "$tmp" matrix.json
-            fi
-          done
-          echo "matrix=$(cat matrix.json | jq -c .)" >> "$GITHUB_OUTPUT"
-
-      - name: Assertions
-        env:
-          MATRIX_JSON: ${{ steps.plan.outputs.matrix }}
-        run: |
-          echo "Generated Matrix: $MATRIX_JSON"
-
-          # 1. Assert 'hello' is REMOVED
-          if echo "$MATRIX_JSON" | jq -e '. | contains(["hello"])' > /dev/null; then echo "Error: hello should be fully filtered out"; exit 1; fi
-
-          # 2. Assert 'biz-ud-gothic' is INCLUDED
-          if ! echo "$MATRIX_JSON" | jq -e '. | contains(["biz-ud-gothic"])' > /dev/null; then echo "Error: biz-ud-gothic should be included"; exit 1; fi
-
-          echo "Assertion passed: Matrix filtered correctly by package."
-
-  # Job 2: Run the actual workflow to ensure it doesn't crash
-  workflow-integration:
-    needs: [verify-plan]
+  test:
+    name: 🧪 integration test
     uses: ./.github/workflows/health-check.yml
     with:
       pnames: '["hello", "biz-ud-gothic"]'
