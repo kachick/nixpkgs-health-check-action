@@ -52,12 +52,6 @@ jobs:
         uses: actions/checkout@v6
         with:
           persist-credentials: false
-      - name: Checkout assets for skip-check
-        uses: actions/checkout@v6
-        with:
-          repository: kachick/nixpkgs-health-check-action
-          path: .action-assets
-          persist-credentials: false
       - id: generate-matrix
         run: |
           pnames=$(nix run github:kachick/nixpkgs-maintained-by -- -id "$MAINTAINER" -json)
@@ -66,11 +60,10 @@ jobs:
           echo '[]' > matrix.json
 
           for pname in $(echo "$pnames" | jq -r '.[]'); do
-            # Check skip status for each service
+            # Use Nix Flake app for skip-check without checking out assets
             if [[ -f "$CONFIG" ]]; then
-              # Note: check-skip.bash handles absolute path conversion internally
-              hydra_skip=$(./.action-assets/check-skip.bash --pname "$pname" --service "hydra" --config "$CONFIG" | jq -r .skip)
-              update_skip=$(./.action-assets/check-skip.bash --pname "$pname" --service "nixpkgs-update" --config "$CONFIG" | jq -r .skip)
+              hydra_skip=$(nix run github:kachick/nixpkgs-health-check-action#check-skip -- --pname "$pname" --service "hydra" --config "$CONFIG" | jq -r .skip)
+              update_skip=$(nix run github:kachick/nixpkgs-health-check-action#check-skip -- --pname "$pname" --service "nixpkgs-update" --config "$CONFIG" | jq -r .skip)
             else
               hydra_skip="false"
               update_skip="false"
