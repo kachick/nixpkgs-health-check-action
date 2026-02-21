@@ -12,7 +12,7 @@ permissions:
   contents: read
 
 jobs:
-  # Job 1: Verify the Decision Maker logic (Skip-list filtering)
+  # Job 1: Verify the Decision Maker logic (Skip-list filtering and UI naming)
   verify-plan:
     name: 🧪 verify skip logic
     runs-on: ubuntu-latest
@@ -37,15 +37,15 @@ jobs:
           echo "Generated Hydra Matrix: $HYDRA_JSON"
           echo "Generated Update Matrix: $UPDATE_JSON"
 
-          # 1. Assert 'hello' is REMOVED (skipped) from both services
-          if echo "$HYDRA_JSON" | jq -e '. | contains(["hello"])' > /dev/null; then echo "Error: hello should be skipped for hydra"; exit 1; fi
-          if echo "$UPDATE_JSON" | jq -e '. | contains(["hello"])' > /dev/null; then echo "Error: hello should be skipped for nixpkgs-update"; exit 1; fi
+          # 1. Assert 'hello' is REMOVED
+          if echo "$HYDRA_JSON" | jq -e '. | contains(["hydra / hello"])' > /dev/null; then echo "Error: hello should be skipped for hydra"; exit 1; fi
+          if echo "$UPDATE_JSON" | jq -e '. | contains(["update / hello"])' > /dev/null; then echo "Error: hello should be skipped for nixpkgs-update"; exit 1; fi
 
-          # 2. Assert 'biz-ud-gothic' is INCLUDED (not skipped)
-          if ! echo "$HYDRA_JSON" | jq -e '. | contains(["biz-ud-gothic"])' > /dev/null; then echo "Error: biz-ud-gothic should be included for hydra"; exit 1; fi
-          if ! echo "$UPDATE_JSON" | jq -e '. | contains(["biz-ud-gothic"])' > /dev/null; then echo "Error: biz-ud-gothic should be included for nixpkgs-update"; exit 1; fi
+          # 2. Assert 'biz-ud-gothic' is INCLUDED with correct UI prefix
+          if ! echo "$HYDRA_JSON" | jq -e '. | contains(["hydra / biz-ud-gothic"])' > /dev/null; then echo "Error: biz-ud-gothic should be included for hydra"; exit 1; fi
+          if ! echo "$UPDATE_JSON" | jq -e '. | contains(["update / biz-ud-gothic"])' > /dev/null; then echo "Error: biz-ud-gothic should be included for nixpkgs-update"; exit 1; fi
 
-          echo "Assertion passed: hello was correctly skipped, and biz-ud-gothic was correctly included."
+          echo "Assertion passed: hello was correctly skipped, and biz-ud-gothic was correctly included with UI prefixes."
 
   # Job 2: Run the actual workflow to ensure it doesn't crash
   workflow-integration:

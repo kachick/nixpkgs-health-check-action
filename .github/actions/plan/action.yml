@@ -35,8 +35,6 @@ runs:
           raw_list="$PNAMES"
         fi
 
-        echo "Input packages: $raw_list"
-
         hydra_list="[]"
         update_list="[]"
 
@@ -49,11 +47,12 @@ runs:
             update_skip="false"
           fi
 
+          # Use "service / pname" format to force GitHub UI to show it in sidebar
           if [[ "$hydra_skip" != "true" ]]; then
-            hydra_list=$(echo "$hydra_list" | jq -c --arg p "$pname" '. += [$p]')
+            hydra_list=$(echo "$hydra_list" | jq -c --arg p "$pname" '. += ["hydra / " + $p]')
           fi
           if [[ "$update_skip" != "true" ]]; then
-            update_list=$(echo "$update_list" | jq -c --arg p "$pname" '. += [$p]')
+            update_list=$(echo "$update_list" | jq -c --arg p "$pname" '. += ["update / " + $p]')
           fi
         done
 
