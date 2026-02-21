@@ -34,7 +34,7 @@ jobs:
         env:
           PNAME: ${{ inputs.pname }}
         run: |
-          json=$(nix eval --impure --json --expr '(import ./check-skip.nix { pname = builtins.getEnv "PNAME"; service = "hydra"; })')
+          json=$(./check-skip.sh --pname "$PNAME" --service "hydra")
           should_skip=$(echo "$json" | jq -r .skip)
           reason=$(echo "$json" | jq -r .reason)
 
@@ -82,7 +82,7 @@ jobs:
         env:
           PNAME: ${{ inputs.pname }}
         run: |
-          json=$(nix eval --impure --json --expr '(import ./check-skip.nix { pname = builtins.getEnv "PNAME"; service = "nixpkgs-update"; })')
+          json=$(./check-skip.sh --pname "$PNAME" --service "nixpkgs-update")
           should_skip=$(echo "$json" | jq -r .skip)
           reason=$(echo "$json" | jq -r .reason)
 
