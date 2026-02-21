@@ -28,9 +28,9 @@ jobs:
           json=$(nix eval --impure --json --expr '(import ./check-skip.nix { pname = builtins.getEnv "PNAME"; check = "hydra"; })')
           should_skip=$(echo "$json" | jq -r .skip)
           reason=$(echo "$json" | jq -r .reason)
-          
+
           echo "should_skip=$should_skip" | tee --append "$GITHUB_OUTPUT"
-          
+
           if [[ "$should_skip" == "true" ]]; then
              echo "Skipping $PNAME for hydra. Reason: $reason"
           fi
@@ -68,9 +68,9 @@ jobs:
           json=$(nix eval --impure --json --expr '(import ./check-skip.nix { pname = builtins.getEnv "PNAME"; check = "nixpkgs-update"; })')
           should_skip=$(echo "$json" | jq -r .skip)
           reason=$(echo "$json" | jq -r .reason)
-          
+
           echo "should_skip=$should_skip" | tee --append "$GITHUB_OUTPUT"
-          
+
           if [[ "$should_skip" == "true" ]]; then
              echo "Skipping $PNAME for nixpkgs-update. Reason: $reason"
           fi
