@@ -105,7 +105,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run hydra check
-        uses: kachick/nixpkgs-health-check-action/.github/actions/hydra@main
+        uses: ./.github/actions/hydra
         with:
           pname: ${{ matrix.pname }}
 
@@ -127,6 +127,6 @@ jobs:
         with:
           persist-credentials: false
       - name: Run update check
-        uses: kachick/nixpkgs-health-check-action/.github/actions/nixpkgs-update@main
+        uses: ./.github/actions/nixpkgs-update
         with:
           pname: ${{ matrix.pname }}
