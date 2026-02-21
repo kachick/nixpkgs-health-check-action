@@ -60,7 +60,7 @@ jobs:
   hydra:
     needs: [plan]
     if: fromJson(needs.plan.outputs.hydra_matrix)[0] != null
-    name: ${{ matrix.pname }} / hydra
+    name: '[hydra] ${{ matrix.pname }}'
     strategy:
       fail-fast: false
       matrix:
@@ -84,7 +84,7 @@ jobs:
   nixpkgs-update:
     needs: [plan]
     if: fromJson(needs.plan.outputs.update_matrix)[0] != null
-    name: ${{ matrix.pname }} / update
+    name: '[update] ${{ matrix.pname }}'
     strategy:
       fail-fast: false
       matrix:

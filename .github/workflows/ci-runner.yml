@@ -12,7 +12,44 @@ permissions:
   contents: read
 
 jobs:
-  test:
+  # Job 1: Verify the Decision Maker logic (Skip-list filtering)
+  verify-plan:
+    name: 🧪 verify skip logic
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
+        with:
+          nix_path: 'nixpkgs=channel:nixpkgs-unstable'
+      - name: Run plan action directly
+        id: plan
+        uses: ./.github/actions/plan
+        with:
+          pnames: '["hello", "biz-ud-gothic"]'
+          config: 'nixpkgs-health-check-by-maintainer.toml'
+      - name: Assertions
+        env:
+          HYDRA_JSON: ${{ steps.plan.outputs.hydra_matrix }}
+          UPDATE_JSON: ${{ steps.plan.outputs.update_matrix }}
+        run: |
+          echo "Generated Hydra Matrix: $HYDRA_JSON"
+          echo "Generated Update Matrix: $UPDATE_JSON"
+
+          # 1. Assert 'hello' is REMOVED (skipped) from both services
+          if echo "$HYDRA_JSON" | jq -e '. | contains(["hello"])' > /dev/null; then echo "Error: hello should be skipped for hydra"; exit 1; fi
+          if echo "$UPDATE_JSON" | jq -e '. | contains(["hello"])' > /dev/null; then echo "Error: hello should be skipped for nixpkgs-update"; exit 1; fi
+
+          # 2. Assert 'biz-ud-gothic' is INCLUDED (not skipped)
+          if ! echo "$HYDRA_JSON" | jq -e '. | contains(["biz-ud-gothic"])' > /dev/null; then echo "Error: biz-ud-gothic should be included for hydra"; exit 1; fi
+          if ! echo "$UPDATE_JSON" | jq -e '. | contains(["biz-ud-gothic"])' > /dev/null; then echo "Error: biz-ud-gothic should be included for nixpkgs-update"; exit 1; fi
+
+          echo "Assertion passed: hello was correctly skipped, and biz-ud-gothic was correctly included."
+
+  # Job 2: Run the actual workflow to ensure it doesn't crash
+  workflow-integration:
+    needs: [verify-plan]
     uses: ./.github/workflows/health-check-by-list.yml
     with:
       pnames: '["hello", "biz-ud-gothic"]'
