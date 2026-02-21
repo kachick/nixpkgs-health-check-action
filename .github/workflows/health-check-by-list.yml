@@ -60,15 +60,16 @@ jobs:
   hydra:
     needs: [plan]
     if: fromJson(needs.plan.outputs.hydra_matrix)[0] != null
-    name: ${{ matrix.job_id }}
+    name: ${{ matrix.item.id }}
     strategy:
       fail-fast: false
       matrix:
-        job_id: '${{ fromJson(needs.plan.outputs.hydra_matrix) }}'
+        item: '${{ fromJson(needs.plan.outputs.hydra_matrix) }}'
     runs-on: ubuntu-24.04
     steps:
       - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
         with:
+          nix_path: 'nixpkgs=channel:nixpkgs-unstable'
           extra_nix_config: |
             sandbox = true
             accept-flake-config = true
@@ -78,21 +79,21 @@ jobs:
       - name: Run hydra check
         uses: ./.github/actions/hydra
         with:
-          # Extract pname by removing the prefix
-          pname: ${{ replace(matrix.job_id, 'hydra / ', '') }}
+          pname: ${{ matrix.item.pname }}
 
   nixpkgs-update:
     needs: [plan]
     if: fromJson(needs.plan.outputs.update_matrix)[0] != null
-    name: ${{ matrix.job_id }}
+    name: ${{ matrix.item.id }}
     strategy:
       fail-fast: false
       matrix:
-        job_id: '${{ fromJson(needs.plan.outputs.update_matrix) }}'
+        item: '${{ fromJson(needs.plan.outputs.update_matrix) }}'
     runs-on: ubuntu-24.04
     steps:
       - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
         with:
+          nix_path: 'nixpkgs=channel:nixpkgs-unstable'
           extra_nix_config: |
             sandbox = true
             accept-flake-config = true
@@ -102,4 +103,4 @@ jobs:
       - name: Run update check
         uses: ./.github/actions/nixpkgs-update
         with:
-          pname: ${{ replace(matrix.job_id, 'update / ', '') }}
+          pname: ${{ matrix.item.pname }}

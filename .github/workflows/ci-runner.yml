@@ -37,15 +37,18 @@ jobs:
           echo "Generated Hydra Matrix: $HYDRA_JSON"
           echo "Generated Update Matrix: $UPDATE_JSON"
 
+          # Helper to check if ID exists in the matrix
+          exists() { echo "$1" | jq -e --arg id "$2" '.[] | select(.id == $id)' > /dev/null; }
+
           # 1. Assert 'hello' is REMOVED
-          if echo "$HYDRA_JSON" | jq -e '. | contains(["hydra / hello"])' > /dev/null; then echo "Error: hello should be skipped for hydra"; exit 1; fi
-          if echo "$UPDATE_JSON" | jq -e '. | contains(["update / hello"])' > /dev/null; then echo "Error: hello should be skipped for nixpkgs-update"; exit 1; fi
+          if exists "$HYDRA_JSON" "hydra / hello"; then echo "Error: hello should be skipped for hydra"; exit 1; fi
+          if exists "$UPDATE_JSON" "update / hello"; then echo "Error: hello should be skipped for nixpkgs-update"; exit 1; fi
 
-          # 2. Assert 'biz-ud-gothic' is INCLUDED with correct UI prefix
-          if ! echo "$HYDRA_JSON" | jq -e '. | contains(["hydra / biz-ud-gothic"])' > /dev/null; then echo "Error: biz-ud-gothic should be included for hydra"; exit 1; fi
-          if ! echo "$UPDATE_JSON" | jq -e '. | contains(["update / biz-ud-gothic"])' > /dev/null; then echo "Error: biz-ud-gothic should be included for nixpkgs-update"; exit 1; fi
+          # 2. Assert 'biz-ud-gothic' is INCLUDED with correct UI id
+          if ! exists "$HYDRA_JSON" "hydra / biz-ud-gothic"; then echo "Error: biz-ud-gothic should be included for hydra"; exit 1; fi
+          if ! exists "$UPDATE_JSON" "update / biz-ud-gothic"; then echo "Error: biz-ud-gothic should be included for nixpkgs-update"; exit 1; fi
 
-          echo "Assertion passed: hello was correctly skipped, and biz-ud-gothic was correctly included with UI prefixes."
+          echo "Assertion passed: hello was correctly skipped, and biz-ud-gothic was correctly included with UI objects."
 
   # Job 2: Run the actual workflow to ensure it doesn't crash
   workflow-integration:
