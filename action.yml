@@ -12,32 +12,11 @@ inputs:
     description: 'Whether to run nixpkgs-update check'
     default: 'true'
     required: false
-  config:
-    description: 'Path to the skip-list configuration file'
-    default: 'nixpkgs-health-check-by-maintainer.toml'
-    required: false
 runs:
   using: 'composite'
   steps:
-    # Service 1: Hydra
-    - name: Hydra skip status
-      if: inputs.hydra == 'true'
-      id: hydra-skip
-      shell: bash
-      env:
-        PNAME: ${{ inputs.pname }}
-        CONFIG: ${{ inputs.config }}
-      run: |
-        if [[ -f "$CONFIG" ]]; then
-          json=$("${{ github.action_path }}/check-skip.bash" --pname "$PNAME" --service "hydra" --config "$CONFIG")
-          if [[ $(echo "$json" | jq -r .skip) == "true" ]]; then
-             echo "Skipping $PNAME for hydra. Reason: $(echo "$json" | jq -r .reason)"
-             echo "should_skip=true" >> "$GITHUB_OUTPUT"
-          fi
-        fi
-
     - name: Run hydra-check
-      if: inputs.hydra == 'true' && steps.hydra-skip.outputs.should_skip != 'true'
+      if: inputs.hydra == 'true'
       shell: bash
       env:
         PNAME: ${{ inputs.pname }}
@@ -50,25 +29,8 @@ runs:
           exit 1
         fi
 
-    # Service 2: nixpkgs-update
-    - name: nixpkgs-update skip status
-      if: inputs.nixpkgs-update == 'true'
-      id: update-skip
-      shell: bash
-      env:
-        PNAME: ${{ inputs.pname }}
-        CONFIG: ${{ inputs.config }}
-      run: |
-        if [[ -f "$CONFIG" ]]; then
-          json=$("${{ github.action_path }}/check-skip.bash" --pname "$PNAME" --service "nixpkgs-update" --config "$CONFIG")
-          if [[ $(echo "$json" | jq -r .skip) == "true" ]]; then
-             echo "Skipping $PNAME for nixpkgs-update. Reason: $(echo "$json" | jq -r .reason)"
-             echo "should_skip=true" >> "$GITHUB_OUTPUT"
-          fi
-        fi
-
     - name: Run nixpkgs-update-log-checker
-      if: inputs.nixpkgs-update == 'true' && steps.update-skip.outputs.should_skip != 'true'
+      if: inputs.nixpkgs-update == 'true'
       shell: bash
       env:
         PNAME: ${{ inputs.pname }}
