@@ -27,20 +27,13 @@ runs:
         CONFIG: ${{ inputs.config }}
         SERVICE: ${{ inputs.service }}
       run: |
-        # Resolve config path to absolute path for Nix
-        if [[ "$CONFIG" = /* ]]; then
-          config_file="$CONFIG"
-        else
-          config_file="$PWD/$CONFIG"
-        fi
-
         # Check Hydra skip status
-        json_hydra=$("${{ github.action_path }}/check-skip.bash" --pname "$PNAME" --service "hydra" --config "$config_file")
+        json_hydra=$("${{ github.action_path }}/check-skip.bash" --pname "$PNAME" --service "hydra" --config "$CONFIG")
         hydra_skip=$(echo "$json_hydra" | jq -r .skip)
         hydra_reason=$(echo "$json_hydra" | jq -r .reason)
 
         # Check nixpkgs-update skip status
-        json_update=$("${{ github.action_path }}/check-skip.bash" --pname "$PNAME" --service "nixpkgs-update" --config "$config_file")
+        json_update=$("${{ github.action_path }}/check-skip.bash" --pname "$PNAME" --service "nixpkgs-update" --config "$CONFIG")
         update_skip=$(echo "$json_update" | jq -r .skip)
         update_reason=$(echo "$json_update" | jq -r .reason)
 

@@ -30,8 +30,13 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z "$PNAME" || -z "$SERVICE" || -z "$CONFIG" ]]; then
-  echo "Usage: $0 --pname <name> --service <hydra|nixpkgs-update> --config <absolute-path>"
+  echo "Usage: $0 --pname <name> --service <hydra|nixpkgs-update> --config <path>"
   exit 1
+fi
+
+# Resolve config path to absolute path for Nix builtins.readFile
+if [[ "$CONFIG" != /* ]]; then
+  CONFIG="$PWD/$CONFIG"
 fi
 
 # nix eval expects PNAME env var for builtins.getEnv
