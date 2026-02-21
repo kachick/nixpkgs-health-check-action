@@ -1,15 +1,20 @@
-name: Cron check
+name: Dogfood maintainer check
 
 on:
   schedule:
     # Every 10:42 JST
     - cron: '42 1 * * *'
+  pull_request:
+    types: [labeled]
 
 permissions:
   contents: read
 
 jobs:
   check:
+    if: |
+      github.event_name == 'schedule' ||
+      (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'run-maintainer-check'))
     uses: ./.github/workflows/health-check-maintainer.yml
     with:
       maintainer: 'kachick'
