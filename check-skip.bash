@@ -39,6 +39,13 @@ if [[ "$CONFIG" != /* ]]; then
   CONFIG="$PWD/$CONFIG"
 fi
 
+# Guard: Ensure the config path is a regular file.
+# If it's a directory or missing, Nix builtins.readFile will fail with "Is a directory" or "No such file".
+if [[ ! -f "$CONFIG" ]]; then
+  echo "Error: Config file '$CONFIG' not found or is not a regular file." >&2
+  exit 1
+fi
+
 # nix eval expects PNAME env var for builtins.getEnv
 export PNAME="$PNAME"
 

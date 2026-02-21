@@ -27,20 +27,16 @@ runs:
         CONFIG: ${{ inputs.config }}
         SERVICE: ${{ inputs.service }}
       run: |
-        # Ensure the config path is absolute for Nix builtins.readFile
-        if [[ "$CONFIG" != /* ]]; then
-          config_file="$PWD/$CONFIG"
-        else
-          config_file="$CONFIG"
-        fi
+        # Use default config name if input is empty to avoid directory path resolution
+        config_path="${CONFIG:-nixpkgs-health-check.toml}"
 
         # Check Hydra skip status
-        json_hydra=$("${{ github.action_path }}/check-skip.bash" --pname "$PNAME" --service "hydra" --config "$config_file")
+        json_hydra=$("${{ github.action_path }}/check-skip.bash" --pname "$PNAME" --service "hydra" --config "$config_path")
         hydra_skip=$(echo "$json_hydra" | jq -r .skip)
         hydra_reason=$(echo "$json_hydra" | jq -r .reason)
 
         # Check nixpkgs-update skip status
-        json_update=$("${{ github.action_path }}/check-skip.bash" --pname "$PNAME" --service "nixpkgs-update" --config "$config_file")
+        json_update=$("${{ github.action_path }}/check-skip.bash" --pname "$PNAME" --service "nixpkgs-update" --config "$config_path")
         update_skip=$(echo "$json_update" | jq -r .skip)
         update_reason=$(echo "$json_update" | jq -r .reason)
 
