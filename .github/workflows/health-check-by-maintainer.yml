@@ -40,7 +40,8 @@ jobs:
       MAINTAINER: ${{ inputs.maintainer }}
       CONFIG: ${{ inputs.config }}
     outputs:
-      matrix: '${{ steps.generate-matrix.outputs.matrix }}'
+      hydra_matrix: '${{ steps.generate-matrix.outputs.hydra_matrix }}'
+      update_matrix: '${{ steps.generate-matrix.outputs.update_matrix }}'
     steps:
       - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
         with:
@@ -48,59 +49,52 @@ jobs:
           extra_nix_config: |
             sandbox = true
             accept-flake-config = true
-      - name: Checkout caller repo
-        uses: actions/checkout@v6
-        with:
-          persist-credentials: false
-      - name: Checkout assets for skip-check
+      - name: Checkout health-check scripts
         uses: actions/checkout@v6
         with:
           repository: kachick/nixpkgs-health-check-action
           path: .health-check-action
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
+      - name: Checkout caller repo for config
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - id: generate-matrix
         run: |
           pnames=$(nix run github:kachick/nixpkgs-maintained-by -- -id "$MAINTAINER" -json)
-          services='["hydra", "nixpkgs-update"]'
 
-          # Generate a flattened matrix: each element is {pname, service, run}
-          echo "$pnames" | jq -c --argjson services "$services" --arg config "$CONFIG" '
-            . as $pnames 
-            | [ $pnames[] | . as $pname | $services[] | {pname: $pname, service: .} ]
-          ' > jobs.json
+          echo '[]' > hydra.json
+          echo '[]' > update.json
 
-          # Annotate each job with skip status
-          echo '[]' > annotated.json
-          for job in $(cat jobs.json | jq -c '.[]'); do
-            pname=$(echo "$job" | jq -r .pname)
-            service=$(echo "$job" | jq -r .service)
-
+          for pname in $(echo "$pnames" | jq -r '.[]'); do
             if [[ -f "$CONFIG" ]]; then
-              skip=$(./.health-check-action/check-skip.bash --pname "$pname" --service "$service" --config "$CONFIG" | jq -r .skip)
+              hydra_skip=$(./.health-check-action/check-skip.bash --pname "$pname" --service "hydra" --config "$CONFIG" | jq -r .skip)
+              update_skip=$(./.health-check-action/check-skip.bash --pname "$pname" --service "nixpkgs-update" --config "$CONFIG" | jq -r .skip)
             else
-              skip="false"
+              hydra_skip="false"
+              update_skip="false"
             fi
 
-            tmp=$(mktemp)
-            echo "$job" | jq --arg run "$([[ "$skip" != "true" ]] && echo true || echo false)" \
-              '. + {run: ($run == "true")}' > "$tmp"
-
-            jq -c --slurp '.[0] + [.[1]]' annotated.json "$tmp" > annotated.tmp.json && mv annotated.tmp.json annotated.json
+            if [[ "$hydra_skip" != "true" ]]; then
+              tmp=$(mktemp); jq -c --arg p "$pname" '. += [$p]' hydra.json > "$tmp" && mv "$tmp" hydra.json
+            fi
+            if [[ "$update_skip" != "true" ]]; then
+              tmp=$(mktemp); jq -c --arg p "$pname" '. += [$p]' update.json > "$tmp" && mv "$tmp" update.json
+            fi
           done
 
-          echo "matrix=$(cat annotated.json | jq -c .)" >> "$GITHUB_OUTPUT"
+          echo "hydra_matrix=$(cat hydra.json | jq -c .)" >> "$GITHUB_OUTPUT"
+          echo "update_matrix=$(cat update.json | jq -c .)" >> "$GITHUB_OUTPUT"
 
-  check:
+  hydra:
     needs: [plan]
-    name: ${{ matrix.item.pname }} (${{ matrix.item.service }})
-    if: matrix.item.run
+    name: hydra / ${{ matrix.pname }}
     strategy:
       fail-fast: false
       matrix:
-        item: '${{ fromJson(needs.plan.outputs.matrix) }}'
+        pname: '${{ fromJson(needs.plan.outputs.hydra_matrix) }}'
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
     steps:
       - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
         with:
@@ -110,7 +104,29 @@ jobs:
       - uses: actions/checkout@v6
         with:
           persist-credentials: false
-      - name: Run check
-        uses: kachick/nixpkgs-health-check-action/.github/actions/${{ matrix.item.service }}@main
+      - name: Run hydra check
+        uses: kachick/nixpkgs-health-check-action/.github/actions/hydra@main
         with:
-          pname: ${{ matrix.item.pname }}
+          pname: ${{ matrix.pname }}
+
+  nixpkgs-update:
+    needs: [plan]
+    name: nixpkgs-update / ${{ matrix.pname }}
+    strategy:
+      fail-fast: false
+      matrix:
+        pname: '${{ fromJson(needs.plan.outputs.update_matrix) }}'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15 # v31.9.0
+        with:
+          extra_nix_config: |
+            sandbox = true
+            accept-flake-config = true
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Run update check
+        uses: kachick/nixpkgs-health-check-action/.github/actions/nixpkgs-update@main
+        with:
+          pname: ${{ matrix.pname }}
