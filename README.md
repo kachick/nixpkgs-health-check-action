@@ -6,6 +6,12 @@ This GitHub Action helps ensure that specific Nixpkgs packages are buildable and
 
 ## Usage
 
+### Live example (Dogfooding)
+
+This repository itself uses this action to check my maintained packages.
+
+[Workflow](.github/workflows/dogfood-maintainer.yml): [![🐶 Status](https://github.com/kachick/nixpkgs-health-check-action/actions/workflows/dogfood-maintainer.yml/badge.svg?branch=main)](https://github.com/kachick/nixpkgs-health-check-action/actions/workflows/dogfood-maintainer.yml?query=branch%3Amain+)
+
 ### Check single package
 
 You can use the composite action to check a single package.
