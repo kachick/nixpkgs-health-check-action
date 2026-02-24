@@ -1,4 +1,8 @@
 {
+  "excludes": [
+    "**/flake.lock",
+    "test/snapshots/**"
+  ],
   "json": {
     "trailingCommas": "never"
   },
