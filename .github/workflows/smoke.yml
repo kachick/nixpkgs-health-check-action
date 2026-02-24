@@ -8,6 +8,7 @@ on:
       - 'action.yml'
       - 'check-skip.*'
       - 'nixpkgs-health-check-by-maintainer.toml'
+  workflow_dispatch:
 
 permissions:
   contents: read
