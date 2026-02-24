@@ -1,0 +1,131 @@
+[]
+[
+  {
+    "tool": "hello-1.0.0.2",
+    "arch": "aarch64-darwin",
+    "status": "Succeeded",
+    "url": "https://hydra.nixos.org/build/322311692",
+    "severity": "success",
+    "icon": "✔"
+  },
+  {
+    "tool": "hello-1.0.0.2",
+    "arch": "aarch64-linux",
+    "status": "Succeeded",
+    "url": "https://hydra.nixos.org/build/322311690",
+    "severity": "success",
+    "icon": "✔"
+  },
+  {
+    "tool": "hello-1.0.0.2",
+    "arch": "x86_64-darwin",
+    "status": "Succeeded",
+    "url": "https://hydra.nixos.org/build/322311695",
+    "severity": "success",
+    "icon": "✔"
+  },
+  {
+    "tool": "hello-1.0.0.2",
+    "arch": "x86_64-linux",
+    "status": "Succeeded",
+    "url": "https://hydra.nixos.org/build/322311693",
+    "severity": "success",
+    "icon": "✔"
+  },
+  {
+    "tool": "hello-2.12.2",
+    "arch": "aarch64-darwin",
+    "status": "Succeeded",
+    "url": "https://hydra.nixos.org/build/322328324",
+    "severity": "success",
+    "icon": "✔"
+  },
+  {
+    "tool": "hello-2.12.2",
+    "arch": "aarch64-linux",
+    "status": "Succeeded",
+    "url": "https://hydra.nixos.org/build/322328325",
+    "severity": "success",
+    "icon": "✔"
+  },
+  {
+    "tool": "hello-2.12.2",
+    "arch": "x86_64-darwin",
+    "status": "Succeeded",
+    "url": "https://hydra.nixos.org/build/322328328",
+    "severity": "success",
+    "icon": "✔"
+  },
+  {
+    "tool": "hello-2.12.2",
+    "arch": "x86_64-linux",
+    "status": "Succeeded",
+    "url": "https://hydra.nixos.org/build/322328327",
+    "severity": "success",
+    "icon": "✔"
+  },
+  {
+    "tool": "hello",
+    "arch": "aarch64-linux",
+    "status": "Succeeded",
+    "url": "https://hydra.nixos.org/build/322499653",
+    "severity": "success",
+    "icon": "✔"
+  },
+  {
+    "tool": "hello",
+    "arch": "x86_64-linux",
+    "status": "Succeeded",
+    "url": "https://hydra.nixos.org/build/322499654",
+    "severity": "success",
+    "icon": "✔"
+  },
+  {
+    "tool": "ghc-9.10.3-with-packages",
+    "arch": "aarch64-darwin",
+    "status": "Succeeded",
+    "url": "https://hydra.nixos.org/build/322501179",
+    "severity": "success",
+    "icon": "✔"
+  },
+  {
+    "tool": "ghc-9.10.3-with-packages",
+    "arch": "aarch64-linux",
+    "status": "Succeeded",
+    "url": "https://hydra.nixos.org/build/322501181",
+    "severity": "success",
+    "icon": "✔"
+  },
+  {
+    "tool": "ghc-9.10.3-with-packages",
+    "arch": "x86_64-darwin",
+    "status": "Succeeded",
+    "url": "https://hydra.nixos.org/build/322501180",
+    "severity": "success",
+    "icon": "✔"
+  },
+  {
+    "tool": "ghc-9.10.3-with-packages",
+    "arch": "x86_64-linux",
+    "status": "Succeeded",
+    "url": "https://hydra.nixos.org/build/322501151",
+    "severity": "success",
+    "icon": "✔"
+  },
+  {
+    "tool": "hello-2.6.9",
+    "arch": "aarch64-linux",
+    "status": "Succeeded",
+    "url": "https://hydra.nixos.org/build/322528777",
+    "severity": "success",
+    "icon": "✔"
+  },
+  {
+    "tool": "hello-2.6.9",
+    "arch": "x86_64-linux",
+    "status": "Succeeded",
+    "url": "https://hydra.nixos.org/build/322528778",
+    "severity": "success",
+    "icon": "✔"
+  }
+]

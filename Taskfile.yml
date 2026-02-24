@@ -16,6 +16,7 @@ tasks:
     cmds:
       # Unit tests
       - nix eval --json --file test-check-skip.nix
+      - ./test-normalize-hydra-eval.bash
       # Integration-like tests (Verify GHA usage pattern)
       - ./check-skip.bash --pname "hello" --service "hydra" | grep -q '"skip":true'
       - ./check-skip.bash --pname "biz-ud-gothic" --service "hydra" | grep -q '"skip":false'

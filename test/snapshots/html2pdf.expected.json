@@ -1,0 +1,35 @@
+[]
+[
+  {
+    "tool": "html2pdf-0.8.2",
+    "arch": "aarch64-darwin",
+    "status": "Succeeded",
+    "url": "https://hydra.nixos.org/build/322329359",
+    "severity": "success",
+    "icon": "✔"
+  },
+  {
+    "tool": "html2pdf-0.8.2",
+    "arch": "aarch64-linux",
+    "status": "Succeeded",
+    "url": "https://hydra.nixos.org/build/322329423",
+    "severity": "success",
+    "icon": "✔"
+  },
+  {
+    "tool": "html2pdf-0.8.2",
+    "arch": "x86_64-darwin",
+    "status": "Succeeded",
+    "url": "https://hydra.nixos.org/build/322329361",
+    "severity": "success",
+    "icon": "✔"
+  },
+  {
+    "tool": "html2pdf-0.8.2",
+    "arch": "x86_64-linux",
+    "status": "Succeeded",
+    "url": "https://hydra.nixos.org/build/322329435",
+    "severity": "success",
+    "icon": "✔"
+  }
+]
