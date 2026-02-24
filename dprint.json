@@ -1,6 +1,5 @@
 {
   "excludes": [
-    "**/flake.lock",
     "test/snapshots/**"
   ],
   "json": {
