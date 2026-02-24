@@ -1,4 +1,7 @@
 {
+  "excludes": [
+    "test/snapshots/**"
+  ],
   "json": {
     "trailingCommas": "never"
   },

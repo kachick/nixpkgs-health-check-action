@@ -16,6 +16,7 @@ tasks:
     cmds:
       # Unit tests
       - nix eval --json --file test-check-skip.nix
+      - ./test-normalize-hydra-eval.bash
       # Integration-like tests (Verify GHA usage pattern)
       - ./check-skip.bash --pname "hello" --service "hydra" | grep -q '"skip":true'
       - ./check-skip.bash --pname "biz-ud-gothic" --service "hydra" | grep -q '"skip":false'
@@ -29,7 +30,8 @@ tasks:
       - dprint check
       - typos . .github .vscode
       - zizmor .
-      - shellcheck check-skip.bash
+      - gitleaks dir . --verbose
+      - shellcheck check-skip.bash test-normalize-hydra-eval.bash
       # nix fmt doesn't have check: https://github.com/NixOS/nix/issues/6918
       - git ls-files '*.nix' | xargs nixfmt --check
       - git ls-files | xargs nix run github:kachick/selfup/v1.3.0 -- list -check
