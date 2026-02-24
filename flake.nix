@@ -42,6 +42,7 @@
 
                 shfmt
                 shellcheck
+                gitleaks
               ]
             );
           };
