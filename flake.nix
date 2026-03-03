@@ -1,11 +1,17 @@
 {
   inputs = {
     nixpkgs.url = "https://channels.nixos.org/nixpkgs-unstable/nixexprs.tar.xz";
+    nixpkgs-update-log-checker = {
+      url = "github:kachick/nixpkgs-update-log-checker";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
     {
+      self,
       nixpkgs,
+      nixpkgs-update-log-checker,
       ...
     }:
     let
@@ -13,6 +19,17 @@
       forAllSystems = lib.genAttrs lib.systems.flakeExposed;
     in
     {
+      packages = forAllSystems (
+        system:
+        let
+          pkgs = nixpkgs.legacyPackages.${system};
+        in
+        pkgs.lib.filesystem.packagesFromDirectoryRecursive {
+          inherit (pkgs) callPackage;
+          directory = ./pkgs;
+        }
+      );
+
       formatter = forAllSystems (system: nixpkgs.legacyPackages.${system}.nixfmt-tree);
       devShells = forAllSystems (
         system:
@@ -35,6 +52,8 @@
                 nixd
                 go-task
                 hydra-check
+                self.packages.${system}.check-skip
+                nixpkgs-update-log-checker.packages.${system}.default
 
                 dprint
                 typos

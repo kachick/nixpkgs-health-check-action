@@ -25,8 +25,8 @@ runs:
         for pname in $(echo "$PNAMES" | jq -r '.[]'); do
           if [[ -f "$CONFIG" ]]; then
             # Safe path resolution via github.action_path
-            hydra_skip=$("${{ github.action_path }}/../../../check-skip.bash" --pname "$pname" --service "hydra" --config "$CONFIG" | jq -r .skip)
-            update_skip=$("${{ github.action_path }}/../../../check-skip.bash" --pname "$pname" --service "nixpkgs-update" --config "$CONFIG" | jq -r .skip)
+            hydra_skip=$(nix run .#check-skip -- --pname "$pname" --service "hydra" --config "$CONFIG" | jq -r .skip)
+            update_skip=$(nix run .#check-skip -- --pname "$pname" --service "nixpkgs-update" --config "$CONFIG" | jq -r .skip)
           else
             hydra_skip="false"
             update_skip="false"

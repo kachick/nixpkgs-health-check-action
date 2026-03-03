@@ -3,7 +3,7 @@ let
 
   # In real usage (via bash wrapper), configPath is always an absolute path string.
   # We simulate this by getting the absolute path of the current directory.
-  pwd = toString ./.;
+  pwd = toString ./../..;
 
   testCases = [
     # Case 1: Package with skip configuration (Should SKIP)
@@ -25,13 +25,6 @@ let
       service = "hydra";
       configPath = "${pwd}/nixpkgs-health-check-by-maintainer.toml";
       expectedSkip = false;
-    }
-    # Case 3: Simulation of the fix (absolute path string)
-    {
-      pname = "hello";
-      service = "hydra";
-      configPath = toString ./nixpkgs-health-check-by-maintainer.toml;
-      expectedSkip = true;
     }
   ];
 

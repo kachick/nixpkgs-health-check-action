@@ -15,23 +15,22 @@ tasks:
   test:
     cmds:
       # Unit tests
-      - nix eval --json --file test-check-skip.nix
-      - ./test-normalize-hydra-eval.bash
+      - nix eval --json --file pkgs/check-skip/test.nix
+      - pkgs/nixpkgs-health-check-hydra/test.bash
       # Integration-like tests (Verify GHA usage pattern)
-      - ./check-skip.bash --pname "hello" --service "hydra" | grep -q '"skip":true'
-      - ./check-skip.bash --pname "biz-ud-gothic" --service "hydra" | grep -q '"skip":false'
+      - nix run .#check-skip -- --pname "hello" --service "hydra" | grep -q '"skip":true'
+      - nix run .#check-skip -- --pname "biz-ud-gothic" --service "hydra" | grep -q '"skip":false'
   fmt:
     cmds:
       - dprint fmt
       - nix fmt
-      - shfmt -w check-skip.bash
   lint:
     cmds:
       - dprint check
       - typos . .github .vscode
       - zizmor .
       - gitleaks dir . --verbose
-      - shellcheck check-skip.bash test-normalize-hydra-eval.bash
+      - shellcheck pkgs/nixpkgs-health-check-hydra/test.bash
       # nix fmt doesn't have check: https://github.com/NixOS/nix/issues/6918
       - git ls-files '*.nix' | xargs nixfmt --check
       - git ls-files | xargs nix run github:kachick/selfup/v1.3.0 -- list -check

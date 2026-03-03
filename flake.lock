@@ -2,20 +2,41 @@
   "nodes": {
     "nixpkgs": {
       "locked": {
-        "lastModified": 1772173633,
-        "narHash": "sha256-BHKMR414WpfUddNyUtx2GR1VPl0R9sWGQs/opgYm9rc=",
-        "rev": "c0f3d81a7ddbc2b1332be0d8481a672b4f6004d6",
+        "lastModified": 1772479524,
+        "narHash": "sha256-U+hMRvavBzJYhdWCWGRHCK3bpcKjqTJAnyii3y09uT8=",
+        "rev": "4215e62dc2cd3bc705b0a423b9719ff6be378a43",
         "type": "tarball",
-        "url": "https://releases.nixos.org/nixpkgs/nixpkgs-26.05pre955350.c0f3d81a7ddb/nixexprs.tar.xz"
+        "url": "https://releases.nixos.org/nixpkgs/nixpkgs-26.05pre957146.4215e62dc2cd/nixexprs.tar.xz"
       },
       "original": {
         "type": "tarball",
         "url": "https://channels.nixos.org/nixpkgs-unstable/nixexprs.tar.xz"
       }
     },
+    "nixpkgs-update-log-checker": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1772166162,
+        "narHash": "sha256-2PYtg4K07h24Qgit5wrwrIg6k5tkAGRZBdjwdOhL+WI=",
+        "owner": "kachick",
+        "repo": "nixpkgs-update-log-checker",
+        "rev": "f8413e1f7c1c11aa9dde89a5efefa2a6ddefd6cf",
+        "type": "github"
+      },
+      "original": {
+        "owner": "kachick",
+        "repo": "nixpkgs-update-log-checker",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
-        "nixpkgs": "nixpkgs"
+        "nixpkgs": "nixpkgs",
+        "nixpkgs-update-log-checker": "nixpkgs-update-log-checker"
       }
     }
   },
