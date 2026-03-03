@@ -3,9 +3,6 @@
 [skip]
 pinact = { nixpkgs-update = "https://github.com/NixOS/nixpkgs/pull/472064" }
 typescript-go = { nixpkgs-update = "https://github.com/NixOS/nixpkgs/pull/490934" }
-ameba-ls = { hydra = "Dependency failure" }
-yaneuraou = { hydra = "Dependency failure" }
-html2pdf = { hydra = "bbcb8b80cb89a7a72e731ed825d66bd5167a0d2a should consider https://github.com/nix-community/hydra-check/pull/94" }
 
 # For testing
 hello = { hydra = "Test skip", nixpkgs-update = "Test skip" }
