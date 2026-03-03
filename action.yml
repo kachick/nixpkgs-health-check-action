@@ -29,4 +29,4 @@ runs:
       env:
         PNAME: ${{ inputs.pname }}
       run: |
-        nix develop --command nixpkgs-update-log-checker --packages "$PNAME"
+        nix run 'github:kachick/nixpkgs-update-log-checker' -- --packages "$PNAME"

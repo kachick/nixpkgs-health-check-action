@@ -10,17 +10,12 @@
 
   inputs = {
     nixpkgs.url = "https://channels.nixos.org/nixpkgs-unstable/nixexprs.tar.xz";
-    nixpkgs-update-log-checker = {
-      url = "github:kachick/nixpkgs-update-log-checker";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
 
   outputs =
     {
       self,
       nixpkgs,
-      nixpkgs-update-log-checker,
       ...
     }:
     let
@@ -62,7 +57,6 @@
                 go-task
                 hydra-check
                 self.packages.${system}.check-skip
-                nixpkgs-update-log-checker.packages.${system}.default
 
                 dprint
                 typos

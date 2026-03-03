@@ -13,30 +13,9 @@
         "url": "https://channels.nixos.org/nixpkgs-unstable/nixexprs.tar.xz"
       }
     },
-    "nixpkgs-update-log-checker": {
-      "inputs": {
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1772166162,
-        "narHash": "sha256-2PYtg4K07h24Qgit5wrwrIg6k5tkAGRZBdjwdOhL+WI=",
-        "owner": "kachick",
-        "repo": "nixpkgs-update-log-checker",
-        "rev": "f8413e1f7c1c11aa9dde89a5efefa2a6ddefd6cf",
-        "type": "github"
-      },
-      "original": {
-        "owner": "kachick",
-        "repo": "nixpkgs-update-log-checker",
-        "type": "github"
-      }
-    },
     "root": {
       "inputs": {
-        "nixpkgs": "nixpkgs",
-        "nixpkgs-update-log-checker": "nixpkgs-update-log-checker"
+        "nixpkgs": "nixpkgs"
       }
     }
   },
