@@ -5,6 +5,7 @@
 
   outputs =
     {
+      self,
       nixpkgs,
       ...
     }:
@@ -13,6 +14,17 @@
       forAllSystems = lib.genAttrs lib.systems.flakeExposed;
     in
     {
+      packages = forAllSystems (
+        system:
+        let
+          pkgs = nixpkgs.legacyPackages.${system};
+        in
+        pkgs.lib.filesystem.packagesFromDirectoryRecursive {
+          inherit (pkgs) callPackage;
+          directory = ./pkgs;
+        }
+      );
+
       formatter = forAllSystems (system: nixpkgs.legacyPackages.${system}.nixfmt-tree);
       devShells = forAllSystems (
         system:
