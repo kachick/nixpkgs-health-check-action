@@ -53,5 +53,5 @@ writeShellApplication {
     export PNAME="$PNAME"
     nix eval --impure --json --file ${./check-skip.nix} \
       --apply "f: f { pname = \"$PNAME\"; service = \"$SERVICE\"; configPath = \"$CONFIG\"; }"
-    '';
-    }
+  '';
+}

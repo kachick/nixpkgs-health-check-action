@@ -26,6 +26,13 @@ let
       configPath = "${pwd}/nixpkgs-health-check-by-maintainer.toml";
       expectedSkip = false;
     }
+    # Case 3: Simulation of the fix (absolute path string)
+    {
+      pname = "hello";
+      service = "hydra";
+      configPath = toString ./../../nixpkgs-health-check-by-maintainer.toml;
+      expectedSkip = true;
+    }
   ];
 
   runTest =
