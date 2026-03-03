@@ -56,7 +56,6 @@
                 nixd
                 go-task
                 hydra-check
-                self.packages.${system}.check-skip
 
                 dprint
                 typos
