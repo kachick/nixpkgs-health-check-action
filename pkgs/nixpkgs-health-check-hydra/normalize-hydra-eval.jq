@@ -8,7 +8,10 @@
   | select(.arch != null)
   | select(
       (.job_name | sub("\\.[^.]+$"; "")) as $attr |
-      ($attr == $query_pname) or ($attr | endswith("." + $query_pname))
+      # Strictly match the attribute path to the query.
+      # This matches canonical packages on ALL platforms (e.g. magika-cli.x86_64-linux, magika-cli.aarch64-darwin)
+      # while ignoring nested, specialized, and test variants (unless they are explicitly queried).
+      $attr == $query_pname
     )
   | (
       if .status == "Succeeded" then "success"
@@ -18,6 +21,7 @@
     ) as $severity
   | {
       tool: .name,
+      attr: (.job_name | sub("\\.[^.]+$"; "")),
       arch: .arch,
       status: .status,
       url: (.build_url // .url),
