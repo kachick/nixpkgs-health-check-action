@@ -1,0 +1,19 @@
+[]
+[
+  {
+    "tool": "magika-cli-1.0.1",
+    "arch": "aarch64-linux",
+    "status": "Succeeded",
+    "url": "https://hydra.nixos.org/build/322981836",
+    "severity": "success",
+    "icon": "✔"
+  },
+  {
+    "tool": "magika-cli-1.0.1",
+    "arch": "x86_64-linux",
+    "status": "Succeeded",
+    "url": "https://hydra.nixos.org/build/322981839",
+    "severity": "success",
+    "icon": "✔"
+  }
+]

@@ -8,7 +8,10 @@
   | select(.arch != null)
   | select(
       (.job_name | sub("\\.[^.]+$"; "")) as $attr |
-      ($attr == $query_pname) or ($attr | endswith("." + $query_pname))
+      # Strictly match the attribute path to the query.
+      # This naturally excludes specialized hardware variants (e.g., pkgsRocm.magika-cli)
+      # and other integration tests (e.g., tests.haskell.ghcWithPackages.hello).
+      $attr == $query_pname
     )
   | (
       if .status == "Succeeded" then "success"
