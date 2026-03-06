@@ -12,15 +12,15 @@
         "arch": "aarch64-darwin",
         "status": "Succeeded",
         "job_name": "magika-cli.aarch64-darwin"
-      },
-      {
-        "name": "magika-cli-1.0.1",
-        "arch": "x86_64-linux",
-        "status": "Succeeded",
-        "job_name": "python312Packages.magika-cli.x86_64-linux"
       }
     ],
     "now_fail": [
+      {
+        "name": "magika-cli-1.0.1",
+        "arch": "x86_64-linux",
+        "status": "Failed",
+        "job_name": "python312Packages.magika-cli.x86_64-linux"
+      },
       {
         "name": "magika-cli-rocm-1.0.1",
         "arch": "x86_64-linux",

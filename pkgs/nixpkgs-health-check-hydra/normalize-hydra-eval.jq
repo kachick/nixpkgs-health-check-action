@@ -8,14 +8,10 @@
   | select(.arch != null)
   | select(
       (.job_name | sub("\\.[^.]+$"; "")) as $attr |
-      # 1. Attribute path matches (canonical or nested, e.g., python3Packages.magika-cli)
-      (($attr == $query_pname) or ($attr | endswith("." + $query_pname))) and
-      # 2. Exclude specialized hardware variants (e.g., pkgsRocm.magika-cli) unless explicitly requested.
-      # This is safer than name matching because package naming can be inconsistent.
-      (
-        (($attr | test("rocm"; "i") | not) or ($query_pname | test("rocm"; "i"))) and
-        (($attr | test("cuda"; "i") | not) or ($query_pname | test("cuda"; "i")))
-      )
+      # Strictly match the attribute path to the query.
+      # This matches canonical packages on ALL platforms (e.g. magika-cli.x86_64-linux, magika-cli.aarch64-darwin)
+      # while ignoring nested, specialized, and test variants (unless they are explicitly queried).
+      $attr == $query_pname
     )
   | (
       if .status == "Succeeded" then "success"
