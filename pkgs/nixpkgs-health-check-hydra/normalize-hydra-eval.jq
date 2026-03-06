@@ -21,6 +21,7 @@
     ) as $severity
   | {
       tool: .name,
+      attr: (.job_name | sub("\\.[^.]+$"; "")),
       arch: .arch,
       status: .status,
       url: (.build_url // .url),

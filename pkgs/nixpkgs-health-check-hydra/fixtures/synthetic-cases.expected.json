@@ -1,6 +1,7 @@
 [
   {
     "tool": "magika-cli-1.0.1",
+    "attr": "magika-cli",
     "arch": "x86_64-linux",
     "status": "Succeeded",
     "url": null,
@@ -9,6 +10,7 @@
   },
   {
     "tool": "magika-cli-1.0.1",
+    "attr": "magika-cli",
     "arch": "aarch64-darwin",
     "status": "Succeeded",
     "url": null,
