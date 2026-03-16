@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: cachix/install-nix-action@v31
+      - uses: NixOS/nix-installer-action@main
       - uses: kachick/nixpkgs-health-check-action@main
         with:
           pname: 'hello'
