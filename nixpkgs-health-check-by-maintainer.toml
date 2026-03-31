@@ -3,7 +3,6 @@
 [skip]
 pinact = { nixpkgs-update = "https://github.com/NixOS/nixpkgs/pull/472064" }
 typescript-go = { nixpkgs-update = "https://github.com/NixOS/nixpkgs/pull/490934" }
-rumdl = { nixpkgs-update = "https://github.com/NixOS/nixpkgs/pull/499523" }
 
 # For testing
 hello = { hydra = "Test skip", nixpkgs-update = "Test skip" }
