@@ -15,7 +15,7 @@
     )
   | (
       if .status == "Succeeded" then "success"
-      elif .status == "Dependency failed" or .status == "Queued" then "warning"
+      elif .status == "Dependency failed" or .status == "Queued" or .status == "Cancelled" or .status == "Aborted" then "warning"
       else "error"
       end
     ) as $severity

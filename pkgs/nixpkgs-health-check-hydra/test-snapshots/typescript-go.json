@@ -1,0 +1,90 @@
+{
+  "0/typescript-go": {
+    "id": 1824589,
+    "filter": "typescript-go",
+    "url": "https://hydra.nixos.org/eval/1824589?filter=typescript-go",
+    "inputs": [
+      {
+        "name": "nixpkgs",
+        "type": "Git checkout",
+        "value": "https://github.com/nixos/nixpkgs.git",
+        "revision": "ecdbf7aeb0685ac5df273d7d8eb07801482725db",
+        "store_path": "/nix/store/gpwzggp75y7s1h3lpn69rjg1zw1r456i-source"
+      },
+      {
+        "name": "officialRelease",
+        "type": "Boolean",
+        "value": "false"
+      }
+    ],
+    "changes": [
+      {
+        "input": "nixpkgs",
+        "description": "98f92e9c002b to ecdbf7aeb068",
+        "url": "https://github.com/nixos/nixpkgs/compare/98f92e9c002b492ead64703d6097bc17de4b779a...ecdbf7aeb0685ac5df273d7d8eb07801482725db",
+        "short_revs": [
+          "98f92e9c002b",
+          "ecdbf7aeb068"
+        ]
+      }
+    ],
+    "aborted": [
+      {
+        "icon": "⏹",
+        "success": false,
+        "status": "Cancelled",
+        "timestamp": "2026-04-18T07:02:16Z",
+        "build_id": "326599008",
+        "build_url": "https://hydra.nixos.org/build/326599008",
+        "name": "typescript-go-0-unstable-2026-04-16",
+        "arch": "aarch64-darwin",
+        "evals": true,
+        "job_name": "typescript-go.aarch64-darwin"
+      },
+      {
+        "icon": "⏹",
+        "success": false,
+        "status": "Cancelled",
+        "timestamp": "2026-04-18T07:02:16Z",
+        "build_id": "326599009",
+        "build_url": "https://hydra.nixos.org/build/326599009",
+        "name": "typescript-go-0-unstable-2026-04-16",
+        "arch": "aarch64-linux",
+        "evals": true,
+        "job_name": "typescript-go.aarch64-linux"
+      },
+      {
+        "icon": "⏹",
+        "success": false,
+        "status": "Cancelled",
+        "timestamp": "2026-04-18T07:02:16Z",
+        "build_id": "326599013",
+        "build_url": "https://hydra.nixos.org/build/326599013",
+        "name": "typescript-go-0-unstable-2026-04-16",
+        "arch": "x86_64-darwin",
+        "evals": true,
+        "job_name": "typescript-go.x86_64-darwin"
+      }
+    ],
+    "now_fail": [],
+    "now_succeed": [],
+    "new": [],
+    "removed": [],
+    "still_fail": [],
+    "still_succeed": [
+      {
+        "icon": "✔",
+        "success": true,
+        "status": "Succeeded",
+        "timestamp": "2026-04-17T11:10:23Z",
+        "build_id": "326599012",
+        "build_url": "https://hydra.nixos.org/build/326599012",
+        "name": "typescript-go-0-unstable-2026-04-16",
+        "arch": "x86_64-linux",
+        "evals": true,
+        "job_name": "typescript-go.x86_64-linux"
+      }
+    ],
+    "unfinished": []
+  }
+}

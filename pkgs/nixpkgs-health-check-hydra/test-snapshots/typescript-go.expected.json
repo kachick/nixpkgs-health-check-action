@@ -1,0 +1,38 @@
+[
+  {
+    "tool": "typescript-go-0-unstable-2026-04-16",
+    "attr": "typescript-go",
+    "arch": "aarch64-darwin",
+    "status": "Cancelled",
+    "url": "https://hydra.nixos.org/build/326599008",
+    "severity": "warning",
+    "icon": "⚠"
+  },
+  {
+    "tool": "typescript-go-0-unstable-2026-04-16",
+    "attr": "typescript-go",
+    "arch": "aarch64-linux",
+    "status": "Cancelled",
+    "url": "https://hydra.nixos.org/build/326599009",
+    "severity": "warning",
+    "icon": "⚠"
+  },
+  {
+    "tool": "typescript-go-0-unstable-2026-04-16",
+    "attr": "typescript-go",
+    "arch": "x86_64-darwin",
+    "status": "Cancelled",
+    "url": "https://hydra.nixos.org/build/326599013",
+    "severity": "warning",
+    "icon": "⚠"
+  },
+  {
+    "tool": "typescript-go-0-unstable-2026-04-16",
+    "attr": "typescript-go",
+    "arch": "x86_64-linux",
+    "status": "Succeeded",
+    "url": "https://hydra.nixos.org/build/326599012",
+    "severity": "success",
+    "icon": "✔"
+  }
+]
