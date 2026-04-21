@@ -1,11 +1,7 @@
 # Configuration for nixpkgs-health-check-action
 
 [skip]
-pinact.nixpkgs-update = """
-See below:
-- https://nixpkgs-update-logs.nix-community.org/pinact/2026-04-13.log # Temporary failure
-- https://github.com/NixOS/nixpkgs/pull/472064#issuecomment-4228308621 # Reason for the delay
-"""
+# Temporary failures
 
 # For testing
 hello = { hydra = "Test skip", nixpkgs-update = "Test skip" }
