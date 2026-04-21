@@ -17,6 +17,7 @@ on:
 
 jobs:
   bump:
+    # NOTE: Since removed selfup depednecies in workflows, we can consider other action or https://github.blog/changelog/2026-04-07-dependabot-version-updates-now-support-the-nix-ecosystem/
     uses: kachick/selfup/.github/workflows/reusable-bump-flake-lock-and-selfup.yml@06a37ddb70ce25ec28b75ce500e15e7fb4d7c4a9 # v1.3.1
     with:
       app_id: ${{ vars.SELFUP_APP_ID }}

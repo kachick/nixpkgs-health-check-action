@@ -25,24 +25,21 @@ permissions:
 
 jobs:
   tasks:
-    strategy:
-      fail-fast: false
-      matrix:
-        os:
-          - ubuntu-24.04
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v6
         with:
           persist-credentials: false
       - uses: NixOS/nix-installer-action@main # There are no tagged releases
-        with:
-          extra-conf: |
-            sandbox = true
-            accept-flake-config = true
-      - run: nix develop --command echo 'This step should be done before any other "nix develop" steps because of measuring Nix build time'
+      - name: Install direnv
+        run: |
+          url="$(nix eval --raw --impure --expr '(builtins.fromJSON (builtins.readFile ./flake.lock)).nodes.nixpkgs.locked.url')"
+          nix profile add "${url}#direnv"
+      - name: Load environment variables
+        run: |
+          direnv allow .
+          direnv export gha > "$GITHUB_ENV"
       - run: nix flake check
       - run: nix flake show
       - run: nix develop --command task check
-    # - run: nix run . -- --version
