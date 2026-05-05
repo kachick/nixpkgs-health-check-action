@@ -23,6 +23,11 @@ writeShellApplication {
     cat tmp/raw_hydra.json
     jq --from-file ${./normalize-hydra-eval.jq} tmp/raw_hydra.json | tee tmp/normalized_hydra.json
 
+    if jq -e '.[] | select(.severity == "warning")' tmp/normalized_hydra.json > tmp/hydra_warnings.jsonl; then
+      echo "::warning::Hydra check found warnings for $PNAME"
+      cat tmp/hydra_warnings.jsonl
+    fi
+
     if jq -e '.[] | select(.severity == "error")' tmp/normalized_hydra.json > tmp/hydra_errors.jsonl; then
       echo "::error::Hydra check failed for $PNAME"
       cat tmp/hydra_errors.jsonl

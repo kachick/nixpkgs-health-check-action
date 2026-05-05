@@ -1,0 +1,39 @@
+[]
+[
+  {
+    "tool": "rumdl-0.1.86",
+    "attr": "rumdl",
+    "arch": "x86_64-darwin",
+    "status": "Timed out",
+    "url": "https://hydra.nixos.org/build/327859662",
+    "severity": "warning",
+    "icon": "⚠"
+  },
+  {
+    "tool": "rumdl-0.1.86",
+    "attr": "rumdl",
+    "arch": "aarch64-darwin",
+    "status": "Succeeded",
+    "url": "https://hydra.nixos.org/build/327859664",
+    "severity": "success",
+    "icon": "✔"
+  },
+  {
+    "tool": "rumdl-0.1.86",
+    "attr": "rumdl",
+    "arch": "aarch64-linux",
+    "status": "Succeeded",
+    "url": "https://hydra.nixos.org/build/327859665",
+    "severity": "success",
+    "icon": "✔"
+  },
+  {
+    "tool": "rumdl-0.1.86",
+    "attr": "rumdl",
+    "arch": "x86_64-linux",
+    "status": "Succeeded",
+    "url": "https://hydra.nixos.org/build/327859663",
+    "severity": "success",
+    "icon": "✔"
+  }
+]
