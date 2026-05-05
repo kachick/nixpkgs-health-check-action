@@ -14,9 +14,9 @@
       $attr == $query_pname
     )
   | (
-      if .status == "Succeeded" then "success"
+      if .status == "Succeeded" or .status == "Queued" then "success"
       else
-        if .arch == "x86_64-darwin" or .status == "Dependency failed" or .status == "Queued" or .status == "Cancelled" or .status == "Aborted" then "warning"
+        if .arch == "x86_64-darwin" or .status == "Dependency failed" or .status == "Cancelled" or .status == "Aborted" then "warning"
         else "error"
         end
       end
