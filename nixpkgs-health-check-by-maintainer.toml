@@ -2,6 +2,9 @@
 
 [skip]
 # Temporary failures
+apery = { nixpkgs-update = "https://nixpkgs-update-logs.nix-community.org/apery/2026-05-17.log" }
+ipamjfont = { nixpkgs-update = "https://nixpkgs-update-logs.nix-community.org/ipamjfont/2026-05-17.log" }
+pinact = { nixpkgs-update = "https://nixpkgs-update-logs.nix-community.org/pinact/2026-05-17.log" }
 
 # For testing
 hello = { hydra = "Test skip", nixpkgs-update = "Test skip" }
