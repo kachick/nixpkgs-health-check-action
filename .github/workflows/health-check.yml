@@ -31,7 +31,7 @@ jobs:
           extra_nix_config: |
             sandbox = true
             accept-flake-config = true
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           persist-credentials: false
       - name: Plan execution
@@ -58,7 +58,7 @@ jobs:
           extra_nix_config: |
             sandbox = true
             accept-flake-config = true
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           persist-credentials: false
       - name: Run health checks
