@@ -2,9 +2,8 @@
 
 [skip]
 # Temporary failures
-apery = { nixpkgs-update = "https://nixpkgs-update-logs.nix-community.org/apery/2026-05-17.log" }
-ipamjfont = { nixpkgs-update = "https://nixpkgs-update-logs.nix-community.org/ipamjfont/2026-05-17.log" }
-pinact = { nixpkgs-update = "https://nixpkgs-update-logs.nix-community.org/pinact/2026-05-17.log" }
+jsonschema-cli = { nixpkgs-update = "https://nixpkgs-update-logs.nix-community.org/jsonschema-cli/2026-06-03.log" }
+pinact = { nixpkgs-update = "I don't check pinact because https://github.com/NixOS/nixpkgs/pull/472064 was unmerged" }
 
 # For testing
 hello = { hydra = "Test skip", nixpkgs-update = "Test skip" }
