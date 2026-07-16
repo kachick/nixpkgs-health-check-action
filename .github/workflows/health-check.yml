@@ -26,7 +26,7 @@ jobs:
     outputs:
       matrix: '${{ steps.plan.outputs.matrix }}'
     steps:
-      - uses: cachix/install-nix-action@8aa03977d8d733052d78f4e008a241fd1dbf36b3 # v31.10.6
+      - uses: cachix/install-nix-action@a49548c11d9846ad46ecc0115273879b045f001c # v31.10.7
         with:
           extra_nix_config: |
             sandbox = true
@@ -53,7 +53,7 @@ jobs:
         item: '${{ fromJson(needs.plan.outputs.matrix) }}'
     runs-on: ubuntu-26.04
     steps:
-      - uses: cachix/install-nix-action@8aa03977d8d733052d78f4e008a241fd1dbf36b3 # v31.10.6
+      - uses: cachix/install-nix-action@a49548c11d9846ad46ecc0115273879b045f001c # v31.10.7
         with:
           extra_nix_config: |
             sandbox = true
