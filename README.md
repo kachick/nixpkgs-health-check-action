@@ -21,8 +21,8 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: NixOS/nix-installer-action@main
+      - uses: actions/checkout@v7
+      - uses: NixOS/nix-installer-action@v1
       - uses: kachick/nixpkgs-health-check-action@main
         with:
           pname: 'hello'
