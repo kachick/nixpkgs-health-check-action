@@ -1,9 +1,8 @@
 # Configuration for nixpkgs-health-check-action
 
 [skip]
-# Temporary failures
-jsonschema-cli = { nixpkgs-update = "https://nixpkgs-update-logs.nix-community.org/jsonschema-cli/2026-06-03.log" }
 pinact = { nixpkgs-update = "I don't check pinact because https://github.com/NixOS/nixpkgs/pull/472064 was unmerged" }
+ameba-ls = { nixpkgs-update = "https://github.com/NixOS/nixpkgs/pull/556801" }
 
 # For testing
 hello = { hydra = "Test skip", nixpkgs-update = "Test skip" }
