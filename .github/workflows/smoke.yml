@@ -16,7 +16,7 @@ permissions:
 jobs:
   smoke-test:
     name: 💨 smoke test
-    uses: ./.github/workflows/health-check.yml
+    uses: $/.github/workflows/health-check.yml
     with:
       # Use minimum set of packages to verify both skip and execution logic
       pnames: '["hello", "biz-ud-gothic"]'
