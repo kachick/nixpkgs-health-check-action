@@ -25,7 +25,15 @@
         }
       );
 
-      formatter = forAllSystems (system: nixpkgs.legacyPackages.${system}.nixfmt-tree);
+      formatter = forAllSystems (
+        system:
+        let
+          pkgs = nixpkgs.legacyPackages.${system};
+        in
+        pkgs.writeShellScriptBin "dprint-fmt" ''
+          exec "${lib.getExe pkgs.dprint}" fmt "$@"
+        ''
+      );
       devShells = forAllSystems (
         system:
         let
@@ -42,8 +50,6 @@
                 # https://github.com/NixOS/nix/issues/730#issuecomment-162323824
                 bashInteractive
                 findutils # xargs
-                nixfmt
-                nixfmt-tree
                 nixd
                 go-task
                 hydra-check
@@ -52,7 +58,6 @@
                 typos
                 zizmor
 
-                shfmt
                 shellcheck
                 gitleaks
               ]
