@@ -36,7 +36,7 @@ jobs:
           persist-credentials: false
       - name: Plan execution
         id: plan
-        uses: ./.github/actions/plan
+        uses: $/.github/actions/plan
         env:
           NIX_PATH: nixpkgs=channel:nixpkgs-unstable
         with:
@@ -64,7 +64,7 @@ jobs:
       - name: Run health checks
         env:
           NIX_PATH: nixpkgs=channel:nixpkgs-unstable
-        uses: ./
+        uses: $/
         with:
           pname: ${{ matrix.item.pname }}
           hydra: ${{ matrix.item.run_hydra }}

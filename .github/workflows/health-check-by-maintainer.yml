@@ -55,7 +55,7 @@ jobs:
 
   runner:
     needs: [get-pnames]
-    uses: ./.github/workflows/health-check.yml
+    uses: $/.github/workflows/health-check.yml
     with:
       pnames: ${{ needs.get-pnames.outputs.pnames }}
       config: ${{ inputs.config }}
