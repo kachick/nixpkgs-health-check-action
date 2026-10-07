@@ -3,5 +3,12 @@
 [skip]
 pinact = { nixpkgs-update = "I don't check pinact because https://github.com/NixOS/nixpkgs/pull/472064 was unmerged" }
 
+# Interested packages - check only nixpkgs-update for now
+cloudflare-warp = { hydra = "Not interested in Hydra for now" }
+fishnet = { hydra = "Not interested in Hydra for now" }
+lichess-bot = { hydra = "Not interested in Hydra for now" }
+stockfish = { hydra = "Not interested in Hydra for now" }
+systemd-lsp = { hydra = "Not interested in Hydra for now" }
+
 # For testing
 hello = { hydra = "Test skip", nixpkgs-update = "Test skip" }

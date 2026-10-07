@@ -8,9 +8,10 @@ This GitHub Action helps ensure that specific Nixpkgs packages are buildable and
 
 ### Live example (Dogfooding)
 
-This repository itself uses this action to check my maintained packages.
+This repository itself uses this action to check packages.
 
-[Workflow](.github/workflows/dogfood-maintainer.yml): [![🐶 Status](https://github.com/kachick/nixpkgs-health-check-action/actions/workflows/dogfood-maintainer.yml/badge.svg?branch=main)](https://github.com/kachick/nixpkgs-health-check-action/actions/workflows/dogfood-maintainer.yml?query=branch%3Amain+)
+- Maintained packages: [Workflow](.github/workflows/dogfood-maintainer.yml) [![🐶 Status](https://github.com/kachick/nixpkgs-health-check-action/actions/workflows/dogfood-maintainer.yml/badge.svg?branch=main)](https://github.com/kachick/nixpkgs-health-check-action/actions/workflows/dogfood-maintainer.yml?query=branch%3Amain+)
+- Interested packages: [Workflow](.github/workflows/dogfood-interests.yml) [![🐶 (Interests) Status](https://github.com/kachick/nixpkgs-health-check-action/actions/workflows/dogfood-interests.yml/badge.svg?branch=main)](https://github.com/kachick/nixpkgs-health-check-action/actions/workflows/dogfood-interests.yml?query=branch%3Amain+)
 
 ### Check single package
 

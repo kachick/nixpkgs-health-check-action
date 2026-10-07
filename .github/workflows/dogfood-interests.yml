@@ -1,9 +1,9 @@
-name: 🐶
+name: 🐶 (Interests)
 
 on:
   schedule:
-    # Every 10:42 JST
-    - cron: '42 1 * * *'
+    # Every 11:42 JST
+    - cron: '42 2 * * *'
   pull_request:
     types: [labeled]
   workflow_dispatch:
@@ -20,8 +20,8 @@ jobs:
     if: |
       github.event_name == 'schedule' ||
       github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'run-maintainer-check'))
-    uses: $/.github/workflows/health-check-by-maintainer.yml
+      (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'run-interests-check'))
+    uses: $/.github/workflows/health-check.yml
     with:
-      maintainer: 'kachick'
+      pnames: '["cloudflare-warp", "fishnet", "lichess-bot", "stockfish", "systemd-lsp"]'
       config: 'nixpkgs-health-check-by-maintainer.toml'
