@@ -3,11 +3,10 @@
 [skip]
 pinact = { nixpkgs-update = "I don't check pinact because https://github.com/NixOS/nixpkgs/pull/472064 was unmerged" }
 
-# Interested packages - check only nixpkgs-update for now
-cloudflare-warp = { hydra = "Not interested in Hydra for now" }
+# Checks only the updater because I wrote the most of logics
 fishnet = { hydra = "Not interested in Hydra for now" }
 lichess-bot = { hydra = "Not interested in Hydra for now" }
-stockfish = { hydra = "Not interested in Hydra for now" }
+stockfish = { hydra = "Not interested in Hydra for now", nixpkgs-update = "https://github.com/NixOS/nixpkgs/pull/572366" }
 systemd-lsp = { hydra = "Not interested in Hydra for now" }
 
 # For testing
