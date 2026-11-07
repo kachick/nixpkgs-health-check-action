@@ -1,6 +1,6 @@
 # nixpkgs-health-check-action
 
-[![CI - Nix Status](https://github.com/kachick/nixpkgs-health-check-action/actions/workflows/ci-nix.yml/badge.svg?branch=main)](https://github.com/kachick/nixpkgs-health-check-action/actions/workflows/ci-nix.yml?query=branch%3Amain+)
+[![CI Status](https://github.com/kachick/nixpkgs-health-check-action/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/kachick/nixpkgs-health-check-action/actions/workflows/ci.yml?query=branch%3Amain+)
 
 This GitHub Action helps ensure that specific Nixpkgs packages are buildable and up-to-date.
 
