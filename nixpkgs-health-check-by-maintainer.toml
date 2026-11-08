@@ -3,10 +3,12 @@
 [skip]
 pinact = { nixpkgs-update = "I don't check pinact because https://github.com/NixOS/nixpkgs/pull/472064 was unmerged" }
 
+fresh-editor = { hydra = "Wait for merging https://github.com/NixOS/nixpkgs/pull/585026" }
+
 # Checks only the updater because I wrote the most of logics
 fishnet = { hydra = "Not interested in Hydra for now" }
 lichess-bot = { hydra = "Not interested in Hydra for now" }
-stockfish = { hydra = "Not interested in Hydra for now", nixpkgs-update = "https://github.com/NixOS/nixpkgs/pull/572366" }
+stockfish = { hydra = "Not interested in Hydra for now" }
 systemd-lsp = { hydra = "Not interested in Hydra for now" }
 
 # For testing
