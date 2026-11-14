@@ -75,7 +75,7 @@ pattern = "go: go\\.mod requires go >="
 reason = "Allow Go version delay across packages"
 
 [[nixpkgs-update.ignore]]
-url = "https://nixpkgs-update-logs.nix-community.org/fresh-editor/2026-11-10.log"
+url = "https://nixpkgs-update-logs.nixos.org/fresh-editor/2026-11-10.log"
 packages = ["fresh-editor"]
 reason = "Fix merged, waiting for next run"
 ```
@@ -105,4 +105,4 @@ jobs:
 ## Scope
 
 - Does not check the entire Nixpkgs repository. It only checks for specified packages.
-- Does not check the latest version of upstream. It only checks [nixpkgs-update](https://github.com/nix-community/nixpkgs-update)'s [results](https://nixpkgs-update-logs.nix-community.org/).
+- Does not check the latest version of upstream. It only checks [nixpkgs-update](https://github.com/nix-community/nixpkgs-update)'s [results](https://nixpkgs-update-logs.nixos.org/).

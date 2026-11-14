@@ -11,7 +11,7 @@ systemd-lsp = { hydra = "Not interested in Hydra for now" }
 hello = { hydra = "Test skip", nixpkgs-update = "Test skip" }
 
 [[nixpkgs-update.ignore]]
-url = "https://nixpkgs-update-logs.nix-community.org/fresh-editor/2026-11-06.log"
+url = "https://nixpkgs-update-logs.nixos.org/fresh-editor/2026-11-06.log"
 reason = "Wait for merging https://github.com/NixOS/nixpkgs/pull/585026"
 
 [[nixpkgs-update.ignore]]
