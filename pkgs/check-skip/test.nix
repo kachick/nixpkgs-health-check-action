@@ -19,6 +19,25 @@ let
       configPath = "${pwd}/nixpkgs-health-check-by-maintainer.toml";
       expectedSkip = true;
     }
+    {
+      pname = "fishnet";
+      service = "hydra";
+      configPath = "${pwd}/nixpkgs-health-check-by-maintainer.toml";
+      expectedSkip = true;
+    }
+    {
+      pname = "fishnet";
+      service = "nixpkgs-update";
+      configPath = "${pwd}/nixpkgs-health-check-by-maintainer.toml";
+      expectedSkip = false;
+    }
+    # Package with only ignore rules should not be skipped
+    {
+      pname = "fresh-editor";
+      service = "nixpkgs-update";
+      configPath = "${pwd}/nixpkgs-health-check-by-maintainer.toml";
+      expectedSkip = false;
+    }
     # Case 2: Package without skip configuration (Should RUN)
     {
       pname = "biz-ud-gothic";

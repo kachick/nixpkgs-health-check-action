@@ -1,19 +1,27 @@
 # Configuration for nixpkgs-health-check-action
 
-[skip]
 # Checks only the updater because I wrote the most of logics
-fishnet = { hydra = "Not interested in Hydra for now" }
-lichess-bot = { hydra = "Not interested in Hydra for now" }
-stockfish = { hydra = "Not interested in Hydra for now" }
-systemd-lsp = { hydra = "Not interested in Hydra for now" }
+[packages.fishnet.hydra]
+skip = "Not interested in Hydra for now"
+
+[packages.lichess-bot.hydra]
+skip = "Not interested in Hydra for now"
+
+[packages.stockfish.hydra]
+skip = "Not interested in Hydra for now"
+
+[packages.systemd-lsp.hydra]
+skip = "Not interested in Hydra for now"
 
 # For testing
-hello = { hydra = "Test skip", nixpkgs-update = "Test skip" }
+[packages.hello]
+hydra = { skip = "Test skip" }
+nixpkgs-update = { skip = "Test skip" }
 
-[[nixpkgs-update.ignore]]
+[[packages.fresh-editor.nixpkgs-update.ignore]]
 url = "https://nixpkgs-update-logs.nixos.org/fresh-editor/2026-11-06.log"
 reason = "Wait for merging https://github.com/NixOS/nixpkgs/pull/585026"
 
-[[nixpkgs-update.ignore]]
+[[global.nixpkgs-update.ignore]]
 pattern = 'go: go\.mod requires go >= [0-9.]+'
 reason = "Allow Go version delay across packages"

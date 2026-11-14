@@ -51,14 +51,18 @@ writeShellApplication {
       exit 1
     fi
 
-    IGNORE_URLS="[]"
+    PACKAGE_IGNORE_URLS="[]"
+    GLOBAL_IGNORE_URLS="[]"
     if [[ -n "$CONFIG" ]]; then
       if [[ ! -f "$CONFIG" ]]; then
         echo "Error: Config file '$CONFIG' not found or is not a regular file." >&2
         exit 1
       fi
-      IGNORE_URLS=$(yj -tj < "$CONFIG" | jq -c '(.hydra.ignore // []) | map(if (.url | type) == "string" and (.url | length) > 0 then .url else error("hydra.ignore entry requires a non-empty string url") end)')
+      config_json=$(yj -tj < "$CONFIG")
+      PACKAGE_IGNORE_URLS=$(printf '%s' "$config_json" | jq -c --arg p "$PNAME" '(.packages[$p].hydra.ignore // []) | map(if (.url | type) == "string" and (.url | length) > 0 then .url else error("packages." + $p + ".hydra.ignore entry requires a non-empty string url") end)')
+      GLOBAL_IGNORE_URLS=$(printf '%s' "$config_json" | jq -c '(.global.hydra.ignore // []) | map(if (.url | type) == "string" and (.url | length) > 0 then .url else error("global.hydra.ignore entry requires a non-empty string url") end)')
     fi
+    IGNORE_URLS=$(jq -cn --argjson a "$PACKAGE_IGNORE_URLS" --argjson b "$GLOBAL_IGNORE_URLS" '$a + $b | unique')
 
     mkdir -p tmp
     hydra-check --json --channel=nixpkgs-unstable --eval "$PNAME" > tmp/raw_hydra.json || true
@@ -68,6 +72,36 @@ writeShellApplication {
     if jq -e '.[] | select(.severity == "warning")' tmp/normalized_hydra.json > tmp/hydra_warnings.jsonl; then
       echo "::warning::Hydra check found warnings for $PNAME"
       cat tmp/hydra_warnings.jsonl
+      if [[ -n "''${GITHUB_STEP_SUMMARY:-}" ]]; then
+        {
+          echo "### Hydra Warnings (\`$PNAME\`)"
+          echo ""
+          echo "| Attr | Arch | Status | URL |"
+          echo "| --- | --- | --- | --- |"
+          jq -r '.[] | select(.severity == "warning") | "| `\(.attr)` | `\(.arch)` | \(.status) | \(.url) |"' tmp/normalized_hydra.json
+          echo ""
+        } >> "$GITHUB_STEP_SUMMARY"
+      fi
+    fi
+
+    if [[ "$PACKAGE_IGNORE_URLS" != "[]" ]] && jq -e 'length > 0' tmp/normalized_hydra.json > /dev/null; then
+      unused_urls=$(jq -r --argjson pkg_urls "$PACKAGE_IGNORE_URLS" '([.[].url]) as $seen | $pkg_urls[] | select(($seen | index(.)) == null)' tmp/normalized_hydra.json)
+      if [[ -n "$unused_urls" ]]; then
+        echo "::warning::Unused Hydra ignore rules for $PNAME (config may be stale)"
+        printf '%s\n' "$unused_urls"
+        if [[ -n "''${GITHUB_STEP_SUMMARY:-}" ]]; then
+          {
+            echo "### Stale Config Warning: Hydra (\`$PNAME\`)"
+            echo ""
+            echo "The following \`packages.$PNAME.hydra.ignore\` URLs did not match any current Hydra build:"
+            echo ""
+            while IFS= read -r url; do
+              echo "- $url"
+            done <<< "$unused_urls"
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+        fi
+      fi
     fi
 
     if jq -e '.[] | select(.severity == "error")' tmp/normalized_hydra.json > tmp/hydra_errors.jsonl; then

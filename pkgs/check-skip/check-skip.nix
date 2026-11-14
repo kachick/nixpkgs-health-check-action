@@ -12,11 +12,30 @@ let
   # Basic structure validation to prevent crashes on malformed TOML
   getAttrOrEmpty = s: k: if builtins.isAttrs s && builtins.hasAttr k s then s.${k} else { };
 
-  skipConfig = getAttrOrEmpty config "skip";
-  packageConfig = getAttrOrEmpty skipConfig pname;
-  hasService = builtins.isAttrs packageConfig && builtins.hasAttr service packageConfig;
+  packagesConfig = getAttrOrEmpty config "packages";
+  packageConfig = getAttrOrEmpty packagesConfig pname;
+  serviceConfig = getAttrOrEmpty packageConfig service;
+  skipValue =
+    if builtins.isAttrs serviceConfig && builtins.hasAttr "skip" serviceConfig then
+      serviceConfig.skip
+    else
+      null;
+  shouldSkip =
+    if builtins.isString skipValue then
+      skipValue != ""
+    else if builtins.isBool skipValue then
+      skipValue
+    else
+      false;
+  reason =
+    if !shouldSkip then
+      ""
+    else if builtins.isString skipValue then
+      skipValue
+    else
+      "Skipped";
 in
 {
-  skip = hasService;
-  reason = if hasService then packageConfig.${service} else "";
+  skip = shouldSkip;
+  inherit reason;
 }

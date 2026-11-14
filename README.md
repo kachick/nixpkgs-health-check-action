@@ -59,25 +59,27 @@ You can skip specific checks for packages with known upstream issues by creating
 ### Example configuration
 
 ```toml
-[skip]
-# package-name = { service-name = "Reason for skipping" }
-typescript-go = { nixpkgs-update = "Failing in nixpkgs-update, see issue #..." }
-hello = { hydra = "Just for testing", nixpkgs-update = "Just for testing" }
+[packages.typescript-go.nixpkgs-update]
+skip = "Failing in nixpkgs-update, see issue #..."
+
+[packages.hello]
+hydra = { skip = "Just for testing" }
+nixpkgs-update = { skip = "Just for testing" }
 
 # Downgrade specific failing Hydra build URLs to warnings
-[[hydra.ignore]]
+[[packages.rumdl.hydra.ignore]]
 url = "https://hydra.nixos.org/build/123456"
 reason = "Fix merged, waiting for next evaluation"
 
-# Skip nixpkgs-update logs matching a regex pattern or exact URL
-[[nixpkgs-update.ignore]]
+# Skip nixpkgs-update logs matching an exact URL
+[[packages.fresh-editor.nixpkgs-update.ignore]]
+url = "https://nixpkgs-update-logs.nixos.org/fresh-editor/2026-11-10.log"
+reason = "Fix merged, waiting for next run"
+
+# Global nixpkgs-update ignore rules across packages
+[[global.nixpkgs-update.ignore]]
 pattern = "go: go\\.mod requires go >="
 reason = "Allow Go version delay across packages"
-
-[[nixpkgs-update.ignore]]
-url = "https://nixpkgs-update-logs.nixos.org/fresh-editor/2026-11-10.log"
-packages = ["fresh-editor"]
-reason = "Fix merged, waiting for next run"
 ```
 
 ### Usage with custom config path

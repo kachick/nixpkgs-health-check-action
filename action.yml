@@ -39,11 +39,53 @@ runs:
         PNAME: ${{ inputs.pname }}
         CONFIG: ${{ inputs.config }}
       run: |
+        has_package_ignore=false
+        set +e
         if [[ -n "$CONFIG" && -f "$CONFIG" ]]; then
           update_config=$(mktemp)
           trap 'rm -f "$update_config"' EXIT
-          nix run .#extract-nixpkgs-update-config -- "$CONFIG" > "$update_config"
-          nix run 'github:kachick/nixpkgs-update-log-checker' -- --packages "$PNAME" --config "$update_config"
+          nix run .#extract-nixpkgs-update-config -- --pname "$PNAME" "$CONFIG" > "$update_config"
+          if nix run .#extract-nixpkgs-update-config -- --package-only --pname "$PNAME" "$CONFIG" | grep -q '^\[\[ignore\]\]'; then
+            has_package_ignore=true
+          fi
+          output=$(nix run 'github:kachick/nixpkgs-update-log-checker' -- --packages "$PNAME" --config "$update_config")
+          status=$?
         else
-          nix run 'github:kachick/nixpkgs-update-log-checker' -- --packages "$PNAME"
+          output=$(nix run 'github:kachick/nixpkgs-update-log-checker' -- --packages "$PNAME")
+          status=$?
         fi
+        set -e
+        printf '%s\n' "$output"
+
+        clean_output=$(printf '%s\n' "$output" | sed 's/\x1b\[[0-9;]*m//g')
+        if [[ "$status" -eq 0 ]]; then
+          if grep -q '\[WARN\]' <<< "$clean_output"; then
+            echo "::warning::nixpkgs-update-log-checker found warnings for $PNAME"
+            if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
+              {
+                echo "### nixpkgs-update Warnings (\`$PNAME\`)"
+                echo ""
+                echo '```text'
+                printf '%s\n' "$clean_output"
+                echo '```'
+                echo ""
+              } >> "$GITHUB_STEP_SUMMARY"
+            fi
+          elif [[ "$has_package_ignore" == "true" ]]; then
+            echo "::warning::Unused nixpkgs-update ignore rules for $PNAME (config may be stale)"
+            if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
+              {
+                echo "### Stale Config Warning: nixpkgs-update (\`$PNAME\`)"
+                echo ""
+                echo "\`packages.$PNAME.nixpkgs-update.ignore\` is configured, but \`$PNAME\` passed without warnings:"
+                echo ""
+                echo '```text'
+                printf '%s\n' "$clean_output"
+                echo '```'
+                echo ""
+              } >> "$GITHUB_STEP_SUMMARY"
+            fi
+          fi
+        fi
+
+        exit "$status"
