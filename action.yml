@@ -40,7 +40,10 @@ runs:
         CONFIG: ${{ inputs.config }}
       run: |
         if [[ -n "$CONFIG" && -f "$CONFIG" ]]; then
-          nix run 'github:kachick/nixpkgs-update-log-checker' -- --packages "$PNAME" --config "$CONFIG"
+          update_config=$(mktemp)
+          trap 'rm -f "$update_config"' EXIT
+          nix run .#extract-nixpkgs-update-config -- "$CONFIG" > "$update_config"
+          nix run 'github:kachick/nixpkgs-update-log-checker' -- --packages "$PNAME" --config "$update_config"
         else
           nix run 'github:kachick/nixpkgs-update-log-checker' -- --packages "$PNAME"
         fi

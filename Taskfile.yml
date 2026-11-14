@@ -21,6 +21,7 @@ tasks:
       # Integration-like tests (Verify GHA usage pattern)
       - nix run .#check-skip -- --pname "hello" --service "hydra" | grep -q '"skip":true'
       - nix run .#check-skip -- --pname "biz-ud-gothic" --service "hydra" | grep -q '"skip":false'
+      - nix run .#extract-nixpkgs-update-config -- nixpkgs-health-check-by-maintainer.toml | grep -q 'ignore'
   fmt:
     cmds:
       - dprint fmt
