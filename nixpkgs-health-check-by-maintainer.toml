@@ -1,10 +1,6 @@
 # Configuration for nixpkgs-health-check-action
 
 [skip]
-pinact = { nixpkgs-update = "I don't check pinact because https://github.com/NixOS/nixpkgs/pull/472064 was unmerged" }
-
-fresh-editor = { hydra = "Wait for merging https://github.com/NixOS/nixpkgs/pull/585026" }
-
 # Checks only the updater because I wrote the most of logics
 fishnet = { hydra = "Not interested in Hydra for now" }
 lichess-bot = { hydra = "Not interested in Hydra for now" }
@@ -13,3 +9,11 @@ systemd-lsp = { hydra = "Not interested in Hydra for now" }
 
 # For testing
 hello = { hydra = "Test skip", nixpkgs-update = "Test skip" }
+
+[[nixpkgs-update.ignore]]
+url = "https://nixpkgs-update-logs.nix-community.org/fresh-editor/2026-11-06.log"
+reason = "Wait for merging https://github.com/NixOS/nixpkgs/pull/585026"
+
+[[nixpkgs-update.ignore]]
+pattern = 'go: go\.mod requires go >= [0-9.]+'
+reason = "Allow Go version delay across packages"
