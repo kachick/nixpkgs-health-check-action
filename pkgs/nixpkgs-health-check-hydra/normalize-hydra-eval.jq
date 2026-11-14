@@ -1,4 +1,5 @@
-[
+($ARGS.named.ignore_urls // []) as $ignore_urls
+| [
   to_entries[]
   | select(.key | test("^[0-9]+/"))
   | (.key | sub("^[0-9]+/"; "")) as $query_pname
@@ -13,10 +14,11 @@
       # while ignoring nested, specialized, and test variants (unless they are explicitly queried).
       $attr == $query_pname
     )
+  | (.build_url // .url) as $url
   | (
       if .status == "Succeeded" or .status == "Queued" then "success"
       else
-        if .arch == "x86_64-darwin" or .status == "Dependency failed" or .status == "Cancelled" or .status == "Aborted" then "warning"
+        if .arch == "x86_64-darwin" or .status == "Dependency failed" or .status == "Cancelled" or .status == "Aborted" or (($ignore_urls | index($url)) != null) then "warning"
         else "error"
         end
       end
@@ -26,7 +28,7 @@
       attr: (.job_name | sub("\\.[^.]+$"; "")),
       arch: .arch,
       status: .status,
-      url: (.build_url // .url),
+      url: $url,
       severity: $severity,
       icon: { "success": "✔", "warning": "⚠", "error": "✖" }[$severity]
     }

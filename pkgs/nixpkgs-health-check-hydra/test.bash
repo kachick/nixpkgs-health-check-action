@@ -30,4 +30,36 @@ for dir in "$SCRIPTPATH/test-snapshots" "$SCRIPTPATH/fixtures"; do
 	done
 done
 
+echo "Testing ignore_urls filter"
+ignored_url="https://hydra.nixos.org/build/201"
+other_url="https://hydra.nixos.org/build/202"
+sample_json=$(
+	cat <<EOF
+{
+  "1/foo": {
+    "now_fail": [
+      { "name": "foo-1.0", "job_name": "foo.x86_64-linux", "arch": "x86_64-linux", "status": "Failed", "build_url": "$ignored_url" },
+      { "name": "foo-1.0", "job_name": "foo.aarch64-linux", "arch": "aarch64-linux", "status": "Failed", "build_url": "$other_url" }
+    ],
+    "still_fail": [],
+    "aborted": [],
+    "now_succeed": [],
+    "still_succeed": [],
+    "new": [],
+    "unfinished": []
+  }
+}
+EOF
+)
+filtered=$(printf '%s' "$sample_json" | jq --argjson ignore_urls "[\"$ignored_url\"]" --from-file "$JQ_FILE")
+if ! printf '%s' "$filtered" | jq -e --arg u "$ignored_url" '.[] | select(.url == $u and .severity == "warning" and .icon == "⚠")' >/dev/null; then
+	echo "FAIL: Expected $ignored_url to be downgraded to warning"
+	FAILED=1
+elif ! printf '%s' "$filtered" | jq -e --arg u "$other_url" '.[] | select(.url == $u and .severity == "error" and .icon == "✖")' >/dev/null; then
+	echo "FAIL: Expected $other_url to remain error"
+	FAILED=1
+else
+	echo "PASS: ignore_urls filter"
+fi
+
 exit "$FAILED"

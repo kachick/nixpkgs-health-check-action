@@ -12,6 +12,10 @@ inputs:
     description: 'Whether to run nixpkgs-update check'
     default: 'true'
     required: false
+  config:
+    description: 'Path to the configuration file for ignoring checks'
+    default: ''
+    required: false
 runs:
   using: 'composite'
   steps:
@@ -20,13 +24,23 @@ runs:
       shell: bash
       env:
         PNAME: ${{ inputs.pname }}
+        CONFIG: ${{ inputs.config }}
       run: |
-        nix run .#nixpkgs-health-check-hydra -- "$PNAME"
+        if [[ -n "$CONFIG" && -f "$CONFIG" ]]; then
+          nix run .#nixpkgs-health-check-hydra -- --config "$CONFIG" "$PNAME"
+        else
+          nix run .#nixpkgs-health-check-hydra -- "$PNAME"
+        fi
 
     - name: Run nixpkgs-update-log-checker
       if: inputs.nixpkgs-update == 'true'
       shell: bash
       env:
         PNAME: ${{ inputs.pname }}
+        CONFIG: ${{ inputs.config }}
       run: |
-        nix run 'github:kachick/nixpkgs-update-log-checker' -- --packages "$PNAME"
+        if [[ -n "$CONFIG" && -f "$CONFIG" ]]; then
+          nix run 'github:kachick/nixpkgs-update-log-checker' -- --packages "$PNAME" --config "$CONFIG"
+        else
+          nix run 'github:kachick/nixpkgs-update-log-checker' -- --packages "$PNAME"
+        fi
