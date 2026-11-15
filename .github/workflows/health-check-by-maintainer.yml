@@ -27,12 +27,17 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 defaults:
   run:
     shell: bash
 
 jobs:
   get-pnames:
+    name: Get package names
     runs-on: ubuntu-26.04
     outputs:
       pnames: '${{ steps.fetch.outputs.json }}'
