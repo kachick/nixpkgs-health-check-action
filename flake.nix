@@ -42,7 +42,10 @@
         {
           default = pkgs.mkShellNoCC {
             # Correct nixd inlay hints
-            env.NIX_PATH = "nixpkgs=${nixpkgs.outPath}";
+            env = {
+              NIX_PATH = "nixpkgs=${nixpkgs.outPath}";
+              CGO_ENABLED = "0";
+            };
 
             buildInputs = (
               with pkgs;
@@ -50,6 +53,7 @@
                 # https://github.com/NixOS/nix/issues/730#issuecomment-162323824
                 bashInteractive
                 findutils # xargs
+                go
                 nixd
                 go-task
                 hydra-check
@@ -58,7 +62,6 @@
                 typos
                 zizmor
 
-                shellcheck
                 gitleaks
               ]
             );

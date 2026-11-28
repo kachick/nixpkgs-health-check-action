@@ -1,6 +1,6 @@
 {
   "excludes": [
-    "pkgs/**/test-snapshots/**"
+    "internal/**/test-snapshots/**"
   ],
   "json": {
     "trailingCommas": "never"

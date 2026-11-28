@@ -17,11 +17,38 @@ permissions:
 
 jobs:
   check:
-    if: |
-      github.event_name == 'schedule' ||
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'run-interests-check'))
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: read
+      issues: write # Upsert the interested packages dashboard issue
     uses: $/.github/workflows/health-check.yml
     with:
       pnames: '["bottom", "dysk", "dust", "eza", "fishnet", "fresh-editor", "herdr", "lichess-bot", "micro", "msedit", "pik", "stockfish", "systemd-lsp", "television"]'
       config: 'nixpkgs-health-check-by-maintainer.toml'
+      dashboard-id: 'interests'
+      dashboard-title: 'Nixpkgs Health Check Dashboard (Interests)'
+      assignee: 'kachick'
+
+  check-pr:
+    name: Check interested packages (PR dry-run)
+    if: github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'run-interests-check')
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+    steps:
+      - uses: NixOS/nix-installer-action@62c1943b776c509394b550f3f983adc14e9212d6 # v1.0.0
+        with:
+          extra-conf: |
+            access-tokens = github.com=${{ github.token }}
+            extra-substituters = https://kachick.cachix.org
+            extra-trusted-public-keys = kachick.cachix.org-1:7giZGKW03gPFkbde09JNpDKCbDGGwBuU/Z11W/jUtEQ=
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Run health checks (dry-run)
+        env:
+          NIX_PATH: nixpkgs=channel:nixpkgs-unstable
+        uses: $/
+        with:
+          pnames: '["bottom", "dysk", "dust", "eza", "fishnet", "fresh-editor", "herdr", "lichess-bot", "micro", "msedit", "pik", "stockfish", "systemd-lsp", "television"]'
+          config: 'nixpkgs-health-check-by-maintainer.toml'

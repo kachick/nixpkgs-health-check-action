@@ -2,20 +2,16 @@
 
 [![CI Status](https://github.com/kachick/nixpkgs-health-check-action/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/kachick/nixpkgs-health-check-action/actions/workflows/ci.yml?query=branch%3Amain+)
 
-This GitHub Action helps ensure that specific Nixpkgs packages are buildable and up-to-date.
+Checks whether specific Nixpkgs packages build on Hydra and pass `nixpkgs-update`, and reports results to `GITHUB_STEP_SUMMARY` and an optional GitHub Dashboard Issue.
 
 ## Usage
 
 ### Live example (Dogfooding)
 
-This repository itself uses this action to check packages.
-
 - Maintained packages: [Workflow](.github/workflows/dogfood-maintainer.yml) [![🐶 Status](https://github.com/kachick/nixpkgs-health-check-action/actions/workflows/dogfood-maintainer.yml/badge.svg?branch=main)](https://github.com/kachick/nixpkgs-health-check-action/actions/workflows/dogfood-maintainer.yml?query=branch%3Amain+)
 - Interested packages: [Workflow](.github/workflows/dogfood-interests.yml) [![🐶 (Interests) Status](https://github.com/kachick/nixpkgs-health-check-action/actions/workflows/dogfood-interests.yml/badge.svg?branch=main)](https://github.com/kachick/nixpkgs-health-check-action/actions/workflows/dogfood-interests.yml?query=branch%3Amain+)
 
-### Check single package
-
-You can use the composite action to check a single package.
+### Check single or multiple packages
 
 ```yaml
 jobs:
@@ -29,34 +25,38 @@ jobs:
           pname: 'hello'
 ```
 
-### Check packages by list or maintainer
+### Check packages with a Dashboard Issue
 
-You can use the reusable workflows to check multiple packages.
-They automatically parallelize checks for each package.
+Set `dashboard-id` (and grant `issues: write`) to keep one open issue updated with the latest status. When `assignee` is set, the workflow assigns that user while errors exist and unassigns them once all errors are resolved. Package failures do not fail the workflow run; only tool or configuration errors fail CI.
 
 ```yaml
 jobs:
   check:
-    # Use health-check.yml for a specific list of packages
+    permissions:
+      contents: read
+      issues: write
     uses: kachick/nixpkgs-health-check-action/.github/workflows/health-check.yml@main
     with:
       pnames: '["hello", "biz-ud-gothic"]'
+      dashboard-id: 'packages'
+      assignee: 'your-id'
 ```
 
 ```yaml
 jobs:
   check:
-    # Use health-check-by-maintainer.yml for all packages of a person
+    permissions:
+      contents: read
+      issues: write
     uses: kachick/nixpkgs-health-check-action/.github/workflows/health-check-by-maintainer.yml@main
     with:
       maintainer: 'kachick'
+      dashboard-id: 'maintainer'
 ```
 
-## Advanced Configuration: Skipping Checks
+## Configuration: Skipping and Ignoring Checks
 
-You can skip specific checks for packages with known upstream issues by creating a configuration file (default: `nixpkgs-health-check-by-maintainer.toml`) in your repository.
-
-### Example configuration
+Skip or downgrade known issues by placing a TOML file (default: `nixpkgs-health-check-by-maintainer.toml`) in the repository.
 
 ```toml
 [packages.typescript-go.nixpkgs-update]
@@ -78,24 +78,8 @@ reason = "Fix merged, waiting for next run"
 
 # Global nixpkgs-update ignore rules across packages
 [[global.nixpkgs-update.ignore]]
-pattern = "go: go\\.mod requires go >="
+pattern = 'go: go\.mod requires go >= [0-9.]+'
 reason = "Allow Go version delay across packages"
-```
-
-### Usage with custom config path
-
-If you use a custom filename or store the config in a subdirectory, you must check out your repository first and provide the path.
-
-```yaml
-jobs:
-  check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6 # Required to read the config file
-      - uses: kachick/nixpkgs-health-check-action/.github/workflows/health-check-by-maintainer.yml@main
-        with:
-          maintainer: 'your-id'
-          config: '.github/my-skip-list.toml' # Specify your config path
 ```
 
 ## Dependencies
@@ -106,5 +90,5 @@ jobs:
 
 ## Scope
 
-- Does not check the entire Nixpkgs repository. It only checks for specified packages.
-- Does not check the latest version of upstream. It only checks [nixpkgs-update](https://github.com/nix-community/nixpkgs-update)'s [results](https://nixpkgs-update-logs.nixos.org/).
+- Checks only specified packages, not all of Nixpkgs.
+- Checks [nixpkgs-update](https://github.com/nix-community/nixpkgs-update) [logs](https://nixpkgs-update-logs.nixos.org/), not upstream releases directly.

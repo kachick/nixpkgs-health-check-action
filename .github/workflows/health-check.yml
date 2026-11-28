@@ -8,10 +8,25 @@ on:
         required: true
         type: string
       config:
-        description: 'Path to the configuration file for skipping checks'
+        description: 'Path to the configuration file for skipping or ignoring checks'
         required: true
         type: string
         default: 'nixpkgs-health-check-by-maintainer.toml'
+      dashboard-id:
+        description: 'Dashboard identifier; when non-empty, upserts a GitHub Dashboard Issue'
+        required: false
+        type: string
+        default: ''
+      dashboard-title:
+        description: 'Title for the Dashboard Issue'
+        required: false
+        type: string
+        default: ''
+      assignee:
+        description: 'GitHub username to assign when errors are present'
+        required: false
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -21,40 +36,12 @@ defaults:
     shell: bash
 
 jobs:
-  plan:
-    name: Plan
-    runs-on: ubuntu-26.04
-    outputs:
-      matrix: '${{ steps.plan.outputs.matrix }}'
-    steps:
-      - uses: NixOS/nix-installer-action@62c1943b776c509394b550f3f983adc14e9212d6 # v1.0.0
-        with:
-          # access-tokens: Prevent GitHub API rate limiting during `nix run github:`
-          extra-conf: |
-            access-tokens = github.com=${{ github.token }}
-            extra-substituters = https://kachick.cachix.org
-            extra-trusted-public-keys = kachick.cachix.org-1:7giZGKW03gPFkbde09JNpDKCbDGGwBuU/Z11W/jUtEQ=
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - name: Plan execution
-        id: plan
-        uses: $/.github/actions/plan
-        env:
-          NIX_PATH: nixpkgs=channel:nixpkgs-unstable
-        with:
-          pnames: ${{ inputs.pnames }}
-          config: ${{ inputs.config }}
-
   check:
-    needs: [plan]
-    if: fromJson(needs.plan.outputs.matrix)[0] != null
-    name: ${{ matrix.item.pname }}
-    strategy:
-      fail-fast: false
-      matrix:
-        item: '${{ fromJson(needs.plan.outputs.matrix) }}'
+    name: Check packages
     runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+      issues: write # Upsert the health check dashboard issue when dashboard-id is set
     steps:
       - uses: NixOS/nix-installer-action@62c1943b776c509394b550f3f983adc14e9212d6 # v1.0.0
         with:
@@ -71,7 +58,9 @@ jobs:
           NIX_PATH: nixpkgs=channel:nixpkgs-unstable
         uses: $/
         with:
-          pname: ${{ matrix.item.pname }}
-          hydra: ${{ matrix.item.run_hydra }}
-          nixpkgs-update: ${{ matrix.item.run_update }}
+          pnames: ${{ inputs.pnames }}
           config: ${{ inputs.config }}
+          dashboard-id: ${{ inputs.dashboard-id }}
+          dashboard-title: ${{ inputs.dashboard-title }}
+          assignee: ${{ inputs.assignee }}
+          token: ${{ github.token }}

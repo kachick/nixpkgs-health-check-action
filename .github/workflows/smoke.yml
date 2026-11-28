@@ -6,18 +6,43 @@ on:
       - '.github/workflows/health-check.yml'
       - '.github/workflows/smoke.yml'
       - 'action.yml'
-      - 'check-skip.*'
+      - 'cmd/**'
+      - 'internal/**'
+      - 'go.mod'
+      - 'go.sum'
+      - 'pkgs/**'
       - 'nixpkgs-health-check-by-maintainer.toml'
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   smoke-test:
     name: 💨 smoke test
-    uses: $/.github/workflows/health-check.yml
-    with:
-      # Use minimum set of packages to verify both skip and execution logic
-      pnames: '["hello", "biz-ud-gothic"]'
-      config: 'nixpkgs-health-check-by-maintainer.toml'
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+    steps:
+      - uses: NixOS/nix-installer-action@62c1943b776c509394b550f3f983adc14e9212d6 # v1.0.0
+        with:
+          # access-tokens: Prevent GitHub API rate limiting during `nix run github:`
+          extra-conf: |
+            access-tokens = github.com=${{ github.token }}
+            extra-substituters = https://kachick.cachix.org
+            extra-trusted-public-keys = kachick.cachix.org-1:7giZGKW03gPFkbde09JNpDKCbDGGwBuU/Z11W/jUtEQ=
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Run smoke test
+        env:
+          NIX_PATH: nixpkgs=channel:nixpkgs-unstable
+        uses: $/
+        with:
+          # Use minimum set of packages to verify both skip and execution logic
+          pnames: '["hello", "biz-ud-gothic"]'
+          config: 'nixpkgs-health-check-by-maintainer.toml'

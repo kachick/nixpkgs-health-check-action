@@ -2,44 +2,46 @@
 
 This document records the architectural decisions made during the evolution of this repository.
 
-## 1. Single-Dimensional Matrix (Package-Centric)
+## 1. Dashboard Issue Reporting Instead of Failing CI (2026-11)
 
 ### Context
 
-We wanted to run checks for each package across multiple services (`hydra`, `nixpkgs-update`).
+Scheduled health checks used to exit with code 1 whenever a package failed on Hydra or `nixpkgs-update`. When an upstream issue could not be fixed right away, daily workflow failure alerts became noisy, even though the check itself ran as expected.
 
 ### Decision
 
-Use a single-dimensional matrix of packages (`pname`). Run services sequentially as steps within a single Job.
+Separate tool/configuration errors from package health results:
 
-### Why not 2D Matrix (pname x service)?
+- Exit with code 1 only when the check itself fails (bad config, missing binary, GitHub API failure).
+- Write package errors, warnings, and stale ignore rules into a single GitHub Dashboard Issue (similar to Renovate's Dependency Dashboard).
+- Assign the configured user when at least one error is present, and unassign when all errors are gone.
 
-- **UI Limitation**: GitHub Actions sidebar (tree view) prioritizes matrix variable values over the `name:` property. A 2D matrix results in ambiguous labels or forces ugly string hacks in matrix values.
-- **Scalability**: Job slots are limited. 2D matrix doubles the Job count, hitting concurrency limits faster.
-- **Readability**: Sequential steps within a job provide a cleaner summary in the execution detail view.
+### Security Guardrails
 
-## 2. Decoupled Planning and Execution
+- Match existing dashboard issues by an HTML comment marker (`<!-- nixpkgs-health-check-dashboard: <id> -->`), and only update open issues authored by `github-actions[bot]` or a repository collaborator (`OWNER`, `MEMBER`, `COLLABORATOR`).
+- Keep `issues: write` out of pull request jobs; PR runs only print the report to `GITHUB_STEP_SUMMARY`.
+
+## 2. Single-Job Parallel Go Runner (2026-11)
 
 ### Context
 
-We debated where the skip-logic (TOML checking) should reside: inside the Runner Action or in a separate Planning step.
+Earlier versions used a `plan` job plus a per-package GitHub Actions matrix (`pname`) with separate bash/jq/Nix scripts (`check-skip`, `extract-nixpkgs-update-config`, `nixpkgs-health-check-hydra`). That structure was chosen so each package had its own job row in the Actions UI when CI failures were the alert mechanism.
 
 ### Decision
 
-Move all decision-making logic (parsing skip-lists) into the `plan` job of the Reusable Workflow. The core Composite Action (`action.yml`) remains a "dumb" runner that simply executes what it is told to do via boolean inputs.
+Replace the matrix and shell scripts with a single Go CLI (`nixpkgs-health-check`) running all packages concurrently in one job.
 
 ### Why?
 
-- **Predictability**: When a workflow calls the action with `hydra: true`, the action will execute Hydra. There is no "hidden" skip logic inside the action that might override the caller's intent.
-- **Efficiency**: Skip-list (TOML) is parsed once in the `plan` job to build the execution matrix, rather than being parsed repeatedly in every matrix job.
-- **UI Clarity**: If a package is skipped for all services, its Job is never even created in the GitHub UI, keeping the results view clean.
-- **Single Responsibility**: The Action focuses on "how to check," while the Workflow focuses on "who to check."
+- **Efficiency**: Installs Nix and builds `nixpkgs-update-log-checker` once per run instead of repeating setup for every package.
+- **Simpler Aggregation**: Building one Dashboard Issue from all packages needs no artifact upload/download or separate report job.
+- **Maintainability**: Typed TOML/JSON parsing (`BurntSushi/toml` + Go 1.27 `encoding/json/v2`), unit tests, and GitHub API calls live in one static binary instead of shell pipelines.
 
 ## 3. Two-Layer Workflow Structure
 
 ### Context
 
-Should we have a single workflow for everything?
+Should a single reusable workflow handle both explicit package lists and maintainer lookups?
 
 ### Decision
 
@@ -47,5 +49,5 @@ Keep `health-check.yml` (Generic List Runner) and `health-check-by-maintainer.ym
 
 ### Why?
 
-- **Validation**: Each workflow can have its own `required: true` inputs. A combined workflow would make input validation ambiguous.
-- **Separation of Concerns**: The runner focuses on "how to check a list," while the adapter focuses on "how to get the list for a person."
+- **Validation**: Each workflow keeps clear `required: true` inputs.
+- **Separation of Concerns**: The runner checks a list of packages, while the adapter resolves the list for a maintainer.

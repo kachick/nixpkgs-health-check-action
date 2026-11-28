@@ -1,9 +1,14 @@
 name: 'Nixpkgs Health Check'
-description: 'Checks the health of a Nixpkgs package using hydra-check and nixpkgs-update logs'
+description: 'Checks the health of Nixpkgs packages using hydra-check and nixpkgs-update logs, and optionally updates a GitHub Dashboard Issue'
 inputs:
   pname:
-    description: 'Package name in Nixpkgs'
-    required: true
+    description: 'Single package name in Nixpkgs'
+    default: ''
+    required: false
+  pnames:
+    description: 'JSON array of package names in Nixpkgs'
+    default: ''
+    required: false
   hydra:
     description: 'Whether to run Hydra check'
     default: 'true'
@@ -13,79 +18,74 @@ inputs:
     default: 'true'
     required: false
   config:
-    description: 'Path to the configuration file for ignoring checks'
+    description: 'Path to the configuration file for skipping or ignoring checks'
+    default: ''
+    required: false
+  concurrency:
+    description: 'Maximum number of packages to check in parallel'
+    default: '4'
+    required: false
+  dashboard-id:
+    description: 'Dashboard identifier; when non-empty, upserts a GitHub Dashboard Issue'
+    default: ''
+    required: false
+  dashboard-title:
+    description: 'Title for the Dashboard Issue'
+    default: ''
+    required: false
+  assignee:
+    description: 'GitHub username to assign when errors are present'
+    default: ''
+    required: false
+  token:
+    description: 'GitHub token with issues:write permission (required only when dashboard-id is set)'
     default: ''
     required: false
 runs:
   using: 'composite'
   steps:
-    - name: Run hydra-check
-      if: inputs.hydra == 'true'
+    - name: Run nixpkgs-health-check
       shell: bash
       env:
+        ACTION_PATH: ${{ github.action_path }}
         PNAME: ${{ inputs.pname }}
+        PNAMES: ${{ inputs.pnames }}
+        RUN_HYDRA: ${{ inputs.hydra }}
+        RUN_UPDATE: ${{ inputs.nixpkgs-update }}
         CONFIG: ${{ inputs.config }}
+        CONCURRENCY: ${{ inputs.concurrency }}
+        DASHBOARD_ID: ${{ inputs.dashboard-id }}
+        DASHBOARD_TITLE: ${{ inputs.dashboard-title }}
+        ASSIGNEE: ${{ inputs.assignee }}
+        GITHUB_TOKEN: ${{ inputs.token }}
       run: |
-        if [[ -n "$CONFIG" && -f "$CONFIG" ]]; then
-          nix run .#nixpkgs-health-check-hydra -- --config "$CONFIG" "$PNAME"
-        else
-          nix run .#nixpkgs-health-check-hydra -- "$PNAME"
+        args=(
+          "--hydra=$RUN_HYDRA"
+          "--nixpkgs-update=$RUN_UPDATE"
+          "--concurrency=$CONCURRENCY"
+        )
+        if [[ -n "$CONFIG" ]]; then
+          args+=("--config=$CONFIG")
+        fi
+        if [[ -n "$DASHBOARD_ID" ]]; then
+          args+=("--dashboard-id=$DASHBOARD_ID")
+        fi
+        if [[ -n "$DASHBOARD_TITLE" ]]; then
+          args+=("--dashboard-title=$DASHBOARD_TITLE")
+        fi
+        if [[ -n "$ASSIGNEE" ]]; then
+          args+=("--assignee=$ASSIGNEE")
+        fi
+        if [[ "$RUN_UPDATE" == "true" ]]; then
+          # Resolve nixpkgs-update-log-checker once so parallel package checks reuse the same binary.
+          checker_out=$(nix build --no-link --print-out-paths 'github:kachick/nixpkgs-update-log-checker')
+          args+=("--update-checker-bin=$checker_out/bin/nixpkgs-update-log-checker")
+        fi
+        if [[ -n "$PNAMES" ]]; then
+          args+=("--pnames-json=$PNAMES")
+        fi
+        if [[ -n "$PNAME" ]]; then
+          args+=("$PNAME")
         fi
 
-    - name: Run nixpkgs-update-log-checker
-      if: inputs.nixpkgs-update == 'true'
-      shell: bash
-      env:
-        PNAME: ${{ inputs.pname }}
-        CONFIG: ${{ inputs.config }}
-      run: |
-        has_package_ignore=false
-        set +e
-        if [[ -n "$CONFIG" && -f "$CONFIG" ]]; then
-          update_config=$(mktemp)
-          trap 'rm -f "$update_config"' EXIT
-          nix run .#extract-nixpkgs-update-config -- --pname "$PNAME" "$CONFIG" > "$update_config"
-          if nix run .#extract-nixpkgs-update-config -- --package-only --pname "$PNAME" "$CONFIG" | grep -q '^\[\[ignore\]\]'; then
-            has_package_ignore=true
-          fi
-          output=$(nix run 'github:kachick/nixpkgs-update-log-checker' -- --packages "$PNAME" --config "$update_config")
-          status=$?
-        else
-          output=$(nix run 'github:kachick/nixpkgs-update-log-checker' -- --packages "$PNAME")
-          status=$?
-        fi
-        set -e
-        printf '%s\n' "$output"
-
-        clean_output=$(printf '%s\n' "$output" | sed 's/\x1b\[[0-9;]*m//g')
-        if [[ "$status" -eq 0 ]]; then
-          if grep -q '\[WARN\]' <<< "$clean_output"; then
-            echo "::warning::nixpkgs-update-log-checker found warnings for $PNAME"
-            if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
-              {
-                echo "### nixpkgs-update Warnings (\`$PNAME\`)"
-                echo ""
-                echo '```text'
-                printf '%s\n' "$clean_output"
-                echo '```'
-                echo ""
-              } >> "$GITHUB_STEP_SUMMARY"
-            fi
-          elif [[ "$has_package_ignore" == "true" ]]; then
-            echo "::warning::Unused nixpkgs-update ignore rules for $PNAME (config may be stale)"
-            if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
-              {
-                echo "### Stale Config Warning: nixpkgs-update (\`$PNAME\`)"
-                echo ""
-                echo "\`packages.$PNAME.nixpkgs-update.ignore\` is configured, but \`$PNAME\` passed without warnings:"
-                echo ""
-                echo '```text'
-                printf '%s\n' "$clean_output"
-                echo '```'
-                echo ""
-              } >> "$GITHUB_STEP_SUMMARY"
-            fi
-          fi
-        fi
-
-        exit "$status"
+        nix run "${ACTION_PATH}#nixpkgs-health-check" -- "${args[@]}"

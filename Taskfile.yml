@@ -15,17 +15,11 @@ tasks:
       - task: lint
   test:
     cmds:
-      # Unit tests
-      - nix eval --json --file pkgs/check-skip/test.nix
-      - pkgs/nixpkgs-health-check-hydra/test.bash
-      # Integration-like tests (Verify GHA usage pattern)
-      - nix run .#check-skip -- --pname "hello" --service "hydra" | grep -q '"skip":true'
-      - nix run .#check-skip -- --pname "biz-ud-gothic" --service "hydra" | grep -q '"skip":false'
-      - nix run .#extract-nixpkgs-update-config -- nixpkgs-health-check-by-maintainer.toml | grep -q 'ignore'
-      - nix run .#extract-nixpkgs-update-config -- --package-only --pname "fresh-editor" nixpkgs-health-check-by-maintainer.toml | grep -q 'fresh-editor'
-      - nix run .#extract-nixpkgs-update-config -- --package-only --pname "biz-ud-gothic" nixpkgs-health-check-by-maintainer.toml | grep -q '^ignore = \[\]$'
+      - go test ./...
+      - go vet ./...
   fmt:
     cmds:
+      - go fmt ./...
       - dprint fmt
   lint:
     cmds:
@@ -33,4 +27,3 @@ tasks:
       - typos . .github .vscode
       - zizmor --pedantic .
       - gitleaks dir . --verbose
-      - git ls-files '*.bash' | xargs shellcheck
